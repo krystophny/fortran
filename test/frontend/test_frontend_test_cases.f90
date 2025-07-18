@@ -2,6 +2,7 @@ program test_frontend_test_cases
     ! Automatically discover and test all frontend test cases in example/frontend_test_cases/
     use frontend, only: compile_source, compilation_options_t
     use standardizer, only: standardize_file
+    use temp_utils, only: temp_dir_manager
     implicit none
 
     integer :: test_count = 0, pass_count = 0
@@ -42,13 +43,15 @@ contains
         character(len=256) :: error_msg
         logical :: success
         type(compilation_options_t) :: options
+        type(temp_dir_manager) :: temp_mgr
 
         test_count = test_count + 1
 
         ! Construct file paths
         input_file = trim(test_path)//"/"//trim(test_name)//".f"
         expected_file = trim(test_path)//"/"//trim(test_name)//".f90"
-        actual_file = "/tmp/test_"//trim(test_name)//"_actual.f90"
+        call temp_mgr%create('frontend_test')
+        actual_file = temp_mgr%get_file_path('test_'//trim(test_name)//'_actual.f90')
 
         ! Check if test case files exist
         if (.not. file_exists(input_file)) then
@@ -117,22 +120,38 @@ contains
       cmd = "find "//trim(dir)//" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort"
 
         ! First count the directories
-        call execute_command_line(cmd//" | wc -l", wait=.true.)
-        open (newunit=unit, file="/tmp/test_case_count.txt", status="replace")
-        close (unit)
+        block
+            type(temp_dir_manager) :: temp_mgr
+            character(len=:), allocatable :: count_file
 
-      call execute_command_line(cmd//" | wc -l > /tmp/test_case_count.txt", wait=.true.)
-        open (newunit=unit, file="/tmp/test_case_count.txt", status="old")
-        read (unit, *) n
-        close (unit)
+            call temp_mgr%create('frontend_test_count')
+            count_file = temp_mgr%get_file_path('test_case_count.txt')
+
+            call execute_command_line(cmd//" | wc -l", wait=.true.)
+            open (newunit=unit, file=count_file, status="replace")
+            close (unit)
+
+            call execute_command_line(cmd//" | wc -l > "//count_file, wait=.true.)
+            open (newunit=unit, file=count_file, status="old")
+            read (unit, *) n
+            close (unit)
+        end block
 
         ! Allocate array
         allocate (cases(n))
         allocate (temp_cases(n))
 
         ! Get directory names
-        call execute_command_line(cmd//" > /tmp/test_cases.txt", wait=.true.)
-        open (newunit=unit, file="/tmp/test_cases.txt", status="old")
+        block
+            type(temp_dir_manager) :: temp_mgr
+            character(len=:), allocatable :: cases_file
+
+            call temp_mgr%create('frontend_test_cases')
+            cases_file = temp_mgr%get_file_path('test_cases.txt')
+
+            call execute_command_line(cmd//" > "//cases_file, wait=.true.)
+            open (newunit=unit, file=cases_file, status="old")
+        end block
         i = 0
         do
             read (unit, '(A)', iostat=iostat) line

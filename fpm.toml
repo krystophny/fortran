@@ -15,7 +15,7 @@ library = false
 test = false
 [dependencies]
 fpm = { git = "https://github.com/krystophny/fpm.git", branch = "main" }
-json-fortran = { git = "https://github.com/jacobwilliams/json-fortran.git" }
+json-fortran = { git = "https://github.com/jacobwilliams/json-fortran.git", branch = "master" }
 
 [fortran]
 implicit-typing = false
@@ -37,4 +37,3 @@ graph = true
 search = true
 [extra.ford.extra_mods]
 iso_fortran_env = "https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html"
-

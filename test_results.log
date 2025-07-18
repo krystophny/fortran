@@ -1,0 +1,1689 @@
+[  0%]     test_runner_edge_cases.f90
+[ 25%]     test_runner_edge_cases.f90  done.
+[ 25%]                 test_cache.f90
+[ 50%]                 test_cache.f90  done.
+[ 50%]         test_runner_edge_cases
+[ 75%]         test_runner_edge_cases  done.
+[ 75%]                     test_cache
+[100%]                     test_cache  done.
+[100%] Project compiled successfully.
+=== Frontend Statement Tests ===
+
+Test 1: Use statement
+  ✓ PASS: Use statement parsed correctly
+Test 2: Print statement
+  ✓ PASS: Print statement parsed correctly
+Test 3: Multiple statements
+  ✓ PASS: Multiple statements parsed correctly
+Test 4: Do while statement
+  ✓ PASS: Do while statement parsed correctly
+
+Frontend statement tests: 4/4 passed
+=== Example Test Cases ===
+
+Test: use_statement
+  ✓ PASS
+Test: print_statement
+  ✓ PASS
+Test: multi_statement
+  ✓ PASS
+
+Example test cases: 3/3 passed
+=============================================================
+Fortran CLI Cache Behavior Tests
+=============================================================
+
+Test 1: Simple Program Compilation Behavior
+-------------------------------------------
+First run (cold cache):
+  ✓ Files compiled as expected
+Second run (warm cache):
+  ✓ Cache used as expected
+  ✓ PASS: Caching behavior correct
+
+Test 2: Local Modules Compilation Behavior
+------------------------------------------
+First run (should compile modules):
+  ✓ Modules compiled as expected
+Second run (should use cache):
+  ✓ Module cache used as expected
+  ✓ PASS: Module caching behavior correct
+
+Test 3: Incremental Compilation Behavior
+----------------------------------------
+Initial build:
+  ✓ Full compilation as expected
+Incremental build:
+  ✓ Cache used for unchanged modules
+  ✓ PASS: Incremental compilation working
+
+
+=============================================================
+Benchmark Summary
+=============================================================
+Tests passed: 3
+Tests failed: 0
+ === Comprehensive Runner Tests ===
+
+ Test 1: File not found error
+Error: File not found: nonexistent_file.f90
+   PASS: File not found error handled correctly
+ Test 2: Invalid file extension
+Error: Input file must have .f90, .F90, .f, or .F extension
+   PASS: Invalid extension error handled correctly
+ Test 3: Basic .f90 file execution
+ + mkdir -p /home/ert/.cache/fortran/modules
+ + mkdir -p /home/ert/.cache/fortran/modules/gfortran
+ + mkdir -p /home/ert/.cache/fortran/modules/gfortran/13.0.0
+/home/ert/.cache/fortran/test_basic_simple_test_basic.f90/build/gfortran_E34ED9D522D08DD2/test_basic/app_main.f90.o
+ Hello from runner test
+   PASS: Basic .f90 execution successful
+ Test 4: .f file preprocessing
+Processing Simple Fortran file with frontend...
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]                test_preprocess
+[100%]                test_preprocess  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/test_preprocess_simple_test_preprocess.f/build/gfortran_764BCDC58073FF0F/test_preprocess/app_main.f90.o
+Module caching completed
+          42
+   PASS: .f file preprocessing successful
+ Test 5: Cache hit scenario
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]                 test_cache_hit
+[100%]                 test_cache_hit  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/tmp/test_runner_cache_A459A9/test_cache_hit_simple_test_cache_hit.f90/build/gfortran_E34ED9D522D08DD2/test_cache_hit/app_main.f90.o
+Module caching completed
+ Cache test
+Cache hit: Using existing build
+Project is up to date
+Caching newly compiled dependency modules...
+/tmp/test_runner_cache_A459A9/test_cache_hit_simple_test_cache_hit.f90/build/gfortran_E34ED9D522D08DD2/test_cache_hit/app_main.f90.o
+Module caching completed
+ Cache test
+   PASS: Cache hit scenario successful
+ Test 6: Verbose modes
+/home/ert/.cache/fortran/test_verbose_simple_test_verbose.f90/build/gfortran_E34ED9D522D08DD2/test_verbose/app_main.f90.o
+ Verbose test
+Cache hit: Using existing build
+Project is up to date
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/test_verbose_simple_test_verbose.f90/build/gfortran_E34ED9D522D08DD2/test_verbose/app_main.f90.o
+Module caching completed
+ Verbose test
+Project structure hash: simple_test_verbose.f90
+Cache hit: Using existing build
+ <INFO> BUILD_NAME: build/gfortran
+ <INFO> COMPILER:  gfortran
+ <INFO> C COMPILER:  gcc
+ <INFO> CXX COMPILER: g++
+ <INFO> COMPILER OPTIONS:   -Wall -Wextra -Wno-external-argument-mismatch -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC
+ <INFO> C COMPILER OPTIONS:
+ <INFO> CXX COMPILER OPTIONS:
+ <INFO> LINKER OPTIONS:
+ <INFO> INCLUDE DIRECTORIES:  []
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/test_verbose_simple_test_verbose.f90/build/gfortran_E34ED9D522D08DD2/test_verbose/app_main.f90.o
+Module caching completed
+ Verbose test
+   PASS: All verbose modes successful
+ Test 7: Custom cache directory
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]              test_custom_cache
+[100%]              test_custom_cache  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/tmp/my_custom_cache_9E70D1/test_custom_cache_simple_test_custom_cache.f90/build/gfortran_E34ED9D522D08DD2/test_custom_cache/app_main.f90.o
+Module caching completed
+ Custom cache test
+   PASS: Custom cache directory successful
+ Test 8: Custom config directory
+Cache miss: Setting up new build
+ Created default registry at: /tmp/my_custom_config_A26975/registry.toml
+Module cache enabled for dependency optimization
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]             test_custom_config
+[100%]             test_custom_config  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/test_custom_config_simple_test_custom_config.f90/build/gfortran_E34ED9D522D08DD2/test_custom_config/app_main.f90.o
+Module caching completed
+ Custom config test
+   PASS: Custom config directory successful
+ Test 9: Parallel jobs flag
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+Note: Parallel builds requested (4 jobs) but current FPM version does not support --jobs flag
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]                  test_parallel
+[100%]                  test_parallel  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/test_parallel_simple_test_parallel.f90/build/gfortran_E34ED9D522D08DD2/test_parallel/app_main.f90.o
+Module caching completed
+ Parallel jobs test
+   PASS: Parallel jobs flag handling successful
+ Test 10: No-wait locking
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]                   test_no_wait
+[100%]                   test_no_wait  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/test_no_wait_simple_test_no_wait.f90/build/gfortran_E34ED9D522D08DD2/test_no_wait/app_main.f90.o
+Module caching completed
+ No-wait test
+   PASS: No-wait locking successful
+ Test 11: Local modules
+Cache miss: Setting up new build
+Found 1 external module dependencies
+Module cache enabled for dependency optimization
+Checking module cache for dependencies...
+  ○ Module not cached: my_module
+ + mkdir -p build/dependencies
+[  0%]                  my_module.f90
+[ 25%]                  my_module.f90  done.
+[ 25%]                      libmain.a
+[ 50%]                      libmain.a  done.
+[ 50%]                       main.f90
+[ 75%]                       main.f90  done.
+[ 75%]                           main
+[100%]                           main  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/home/ert/.cache/fortran/main_fpm_AAFA2EE2AD6DAF7E/build/gfortran_E34ED9D522D08DD2/my_module.mod
+/home/ert/.cache/fortran/main_fpm_AAFA2EE2AD6DAF7E/build/gfortran_E34ED9D522D08DD2/main/src_my_module.f90.o
+/home/ert/.cache/fortran/main_fpm_AAFA2EE2AD6DAF7E/build/gfortran_E34ED9D522D08DD2/main/app_main.f90.o
+Module caching completed
+ Hello from module
+   PASS: Local modules handling successful
+ Test 12: Error handling paths
+Error: Build failed. Run with -v to see details.
+   PASS: Error handling in quiet mode successful
+Cache hit: Using existing build
+[  0%]                       main.f90
+<ERROR> Compilation failed for object " app_main.f90.o "
+[ 50%]                       main.f90  done.
+
+app/main.f90:4:6:
+
+    4 |   x = "this should cause an error"
+      |      1
+Error: Cannot convert CHARACTER(26) to INTEGER(4) at (1)
+<ERROR> stopping due to failed compilation
+STOP 1
+   PASS: Error handling paths successful
+
+ All runner tests PASSED!
+ === Runner Module Edge Case Tests ===
+
+ Test 1: Non-existent file handling
+Error: File not found: /tmp/fortran_test_A17F3C/definitely_does_not_exist_12345.f90
+Error: File not found:
+   PASS: Non-existent file handling
+ Test 2: Invalid file extensions
+Error: Input file must have .f90, .F90, .f, or .F extension
+Error: Input file must have .f90, .F90, .f, or .F extension
+   PASS: Invalid extensions
+ Test 3: Empty file handling
+Project structure hash: simple_test_runner_empty.f90
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+Note: Parallel builds requested (1 jobs) but current FPM version does not support --jobs flag
+ + mkdir -p build/dependencies
+ <INFO> BUILD_NAME: build/gfortran
+ <INFO> COMPILER:  gfortran
+ <INFO> C COMPILER:  gcc
+ <INFO> CXX COMPILER: g++
+ <INFO> COMPILER OPTIONS:   -Wall -Wextra -Wno-external-argument-mismatch -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC
+ <INFO> C COMPILER OPTIONS:
+ <INFO> CXX COMPILER OPTIONS:
+ <INFO> LINKER OPTIONS:
+ <INFO> INCLUDE DIRECTORIES:  []
+ + mkdir -p build/gfortran_E34ED9D522D08DD2
+ + mkdir -p build/gfortran_2E1845944E00BB22
+[  0%]                       main.f90
+ + mkdir -p build/gfortran_E34ED9D522D08DD2/test_runner_empty/
+ + gfortran -c app/main.f90   -Wall -Wextra -Wno-external-argument-mismatch -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC -fimplicit-none -Werror=implicit-interface -ffree-form -J build/gfortran_E34ED9D522D08DD2 -Ibuild/gfortran_E34ED9D522D08DD2 -o build/gfortran_E34ED9D522D08DD2/test_runner_empty/app_main.f90.o
+[ 50%]                       main.f90  done.
+[ 50%]              test_runner_empty
+ + mkdir -p build/gfortran_2E1845944E00BB22/app/
+ + gfortran    -Wall -Wextra -Wno-external-argument-mismatch -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC -fimplicit-none -Werror=implicit-interface  build/gfortran_E34ED9D522D08DD2/test_runner_empty/app_main.f90.o  -o build/gfortran_2E1845944E00BB22/app/test_runner_empty
+<ERROR> Compilation failed for object " test_runner_empty "
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/Scrt1.o: in function `_start':
+(.text+0x1b): undefined reference to `main'
+collect2: error: ld returned 1 exit status
+[100%]              test_runner_empty  done.
+
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/15.1.1/../../../../lib/Scrt1.o: in function `_start':
+(.text+0x1b): undefined reference to `main'
+collect2: error: ld returned 1 exit status
+<ERROR> stopping due to failed compilation
+STOP 1
+   PASS: Empty file handling
+ Test 4: Custom directory handling
+Cache miss: Setting up new build
+ Created default registry at: /tmp/fortran_test_runner_custom_config_A446E2/registry.toml
+Module cache enabled for dependency optimization
+Note: Parallel builds requested (1 jobs) but current FPM version does not support --jobs flag
+ + mkdir -p build/dependencies
+[  0%]                       main.f90
+[ 50%]                       main.f90  done.
+[ 50%]        test_runner_custom_dirs
+[100%]        test_runner_custom_dirs  done.
+[100%] Project compiled successfully.
+Caching newly compiled dependency modules...
+/tmp/fortran_test_runner_custom_cache_A43B27/test_runner_custom_dirs_simple_test_runner_custom_dirs.f/build/gfortran_E34ED9D522D08DD2/test_runner_custom_dirs/app_main.f90.o
+Module caching completed
+ Hello from custom dirs
+   PASS: Custom directories
+ Test 5: Preprocessing error handling
+Processing Simple Fortran file with frontend...
+Creating preprocessed file: /home/ert/.cache/fortran/preprocessed_fpm_CD2D7311DDF047E5.f90
+Using AST-based preprocessor
+Preprocessed file ready: /home/ert/.cache/fortran/preprocessed_fpm_CD2D7311DDF047E5.f90
+Project structure hash: simple_test_runner_preprocess.f
+Cache miss: Setting up new build
+Module cache enabled for dependency optimization
+Note: Parallel builds requested (1 jobs) but current FPM version does not support --jobs flag
+ + mkdir -p build/dependencies
+ <INFO> BUILD_NAME: build/gfortran
+ <INFO> COMPILER:  gfortran
+ <INFO> C COMPILER:  gcc
+ <INFO> CXX COMPILER: g++
+ <INFO> COMPILER OPTIONS:   -fdefault-real-8 -fdefault-double-8
+ <INFO> C COMPILER OPTIONS:
+ <INFO> CXX COMPILER OPTIONS:
+ <INFO> LINKER OPTIONS:
+ <INFO> INCLUDE DIRECTORIES:  []
+ + mkdir -p build/gfortran_764BCDC58073FF0F
+ + mkdir -p build/gfortran_2B32A0D7BABF586B
+[  0%]                       main.f90
+ + mkdir -p build/gfortran_764BCDC58073FF0F/test_runner_preprocess/
+ + gfortran -c app/main.f90   -fdefault-real-8 -fdefault-double-8 -fimplicit-none -Werror=implicit-interface -ffree-form -J build/gfortran_764BCDC58073FF0F -Ibuild/gfortran_764BCDC58073FF0F -o build/gfortran_764BCDC58073FF0F/test_runner_preprocess/app_main.f90.o
+<ERROR> Compilation failed for object " app_main.f90.o "
+app/main.f90:5:5:
+
+    5 |     c
+      |     1
+Error: Unclassifiable statement at (1)
+[ 50%]                       main.f90  done.
+
+app/main.f90:5:5:
+
+    5 |     c
+      |     1
+Error: Unclassifiable statement at (1)
+<ERROR> stopping due to failed compilation
+STOP 1
+   PASS: Preprocessing errors
+ Test 6: Parallel execution options
+/home/ert/.cache/fortran/test_runner_parallel_simple_test_runner_parallel.f90/build/gfortran_E34ED9D522D08DD2/test_runner_parallel/app_main.f90.o
+ Testing parallel build
+/home/ert/.cache/fortran/test_runner_parallel_simple_test_runner_parallel.f90/build/gfortran_E34ED9D522D08DD2/test_runner_parallel/app_main.f90.o
+ Testing parallel build
+/home/ert/.cache/fortran/test_runner_parallel_simple_test_runner_parallel.f90/build/gfortran_E34ED9D522D08DD2/test_runner_parallel/app_main.f90.o
+ Testing parallel build
+STOP 0
+   PASS: Parallel execution
+
+ All runner edge case tests passed!
+ === FPM Version Generation Tests ===\
+  Module pyplot_module -> package pyplot-fortran
+  Module fortplot_test -> package fortplotlib
+ PASS: pyplot-fortran with version v1.0.0 found in fpm.toml
+ PASS: fortplotlib without version found in fpm.toml
+ All FPM version generation tests passed!
+ === FPM Generator Tests ===
+
+ Test 1: Generate fpm.toml with pyplot dependency
+  Module pyplot_module -> package pyplot-fortran
+ PASS: Generated fpm.toml with correct dependencies
+
+ Test 2: Multiple dependencies
+  Module fortplot -> package fortplotlib
+  Module pyplot_module -> package pyplot-fortran
+ PASS: Multiple dependencies correctly added
+
+ All FPM generator tests passed!
+ === Notebook Executor Unit Tests ===
+
+ Test 1: Basic notebook execution
+   PASS
+ Test 2: Execution results structure
+   PASS
+ Test 3: Multiple cell execution
+   PASS
+ Test 4: Error handling
+   PASS
+ Test 5: Cache directory usage
+   PASS
+ Test 6: Empty notebook handling
+   PASS
+ Test 7: Mixed cell types
+   PASS
+STOP 0
+ Test 8: Variable persistence structure
+   PASS
+ Test 9: Print statement output structure
+   PASS
+ Test 10: Memory management
+   PASS
+
+ All notebook executor tests passed!
+STOP 0
+ Testing notebook parser...
+   Test 1: Simple notebook...
+     PASSED
+   Test 2: Default code cell...
+     PASSED
+   Test 3: Multiple cells...
+     PASSED
+   Test 4: Empty cells...
+     PASSED
+   Test 5: Nested code structures...
+     PASSED
+ All notebook parser tests passed!
+ === Renderer Simple Tests ===
+
+ Test 1: Basic rendering
+   PASS: Basic rendering
+ Test 2: Save markdown
+ Error: Could not write to file:/tmp/renderer_simple_test_A2FC74/test_renderer_save.md
+   FAILED: Saved file does not exist
+STOP 1
+
+ Some renderer simple tests failed!
+ === Notebook Figure Integration Tests ===
+
+   Test 1: Figure base64 embedding...
+     ✓ Base64 conversion working
+     ✓ Figure embedded correctly in markdown
+   Test 2: Show() call interception...
+WARNING: The convert command is deprecated in IMv7, use "magick" instead of "convert" or "magick convert"
+
+     ✓ Show() call interception working
+   Test 3: End-to-end notebook with figures...
+     ✓ End-to-end notebook execution working
+STOP 0
+
+ All notebook figure integration tests passed!
+ === Notebook Examples Tests ===
+
+ Test 1: simple_math.f example
+   PASS
+ Test 2: arrays_loops.f example
+   PASS
+ Test 3: control_flow.f example
+   PASS
+STOP 0
+
+ All notebook example tests passed!
+ Testing notebook integration...
+   Test 1: Simple notebook execution...
+     PASSED
+   Test 2: Markdown rendering...
+     PASSED
+   Test 3: Multi-cell execution...
+     PASSED
+   Test 4: Plot capture (mock)...
+STOP 0
+     PASSED
+ All notebook integration tests passed!
+ === Notebook Parser Edge Case Tests ===
+
+ Test 1: Empty notebook parsing
+   PASS: Empty notebook parsing
+ Test 2: Malformed cell markers
+   PASS: Malformed markers
+ Test 3: Nested and consecutive markers
+   PASS: Nested markers
+ Test 4: Large content handling
+   PASS: Large content
+ Test 5: Special characters and encodings
+   PASS: Special characters
+ Test 6: Mixed content and file operations
+   WARNING: Non-existent file produced cells
+   PASS: Mixed content
+STOP 0
+
+ All notebook parser edge case tests passed!
+ === Extended Notebook Renderer Tests ===
+
+ Test 1: Markdown cell edge cases
+   PASS: Markdown edge cases
+ Test 2: Code cell output formatting
+   PASS: Code cell formatting
+ Test 3: Empty notebook rendering
+   PASS: Empty notebook
+ Test 4: Large notebook rendering
+   PASS: Large notebook
+ Test 5: Save markdown edge cases
+STOP 0
+   WARNING: Output file was not created
+ Error: Could not write to file:/dev/null/invalid/path.md
+   PASS: Save markdown edge cases
+
+ All extended notebook renderer tests passed!
+ === Comprehensive Notebook Output Tests ===
+
+ Test 1: Initialization
+   PASS: Initialization works correctly
+ Test 2: Cell capture
+   PASS: Cell capture works correctly
+ Test 3: Print functions
+   PASS: All print functions work correctly
+ Test 4: Error handling
+   PASS: Error handling works correctly
+ Test 5: Output retrieval
+   PASS: Output retrieval works correctly
+ Test 6: File operations
+   PASS: File operations work correctly
+ Test 7: Edge cases
+   PASS: Edge cases handled correctly
+ Test 8: Memory management
+   PASS: Memory management works correctly
+
+ All comprehensive notebook output tests PASSED!
+ === Notebook System Tests ===
+
+ Test 1: CLI help includes notebook options
+sh: line 1: /tmp/fortran_system_test_A039E0/fortran_system_test.out: No such file or directory
+   FAIL: --notebook flag not found in help
+ Test 2: Notebook CLI execution
+sh: line 1: /tmp/fortran_system_test_A07C59/fortran_system_test.out: No such file or directory
+   FAIL: Notebook execution failed with exit code           1
+   Output:
+ Test 3: Output file content validation
+   FAIL: Output file is empty
+ Test 4: Cache performance verification
+sh: line 1: /tmp/fortran_system_test_A0CA8D/fortran_system_test.out: No such file or directory
+sh: line 1: /tmp/fortran_system_test_A11CAA/fortran_system_test.out: No such file or directory
+STOP 1
+   FAIL: One of the executions failed
+
+ Some system tests failed!
+ === Extended Notebook Output Tests ===
+
+ Test 1: Basic output capture
+   PASS: Basic output capture
+ Test 2: Multi-cell output management
+   PASS: Multi-cell outputs
+ Test 3: Error output handling
+   PASS: Error output handling
+ Test 4: Output limits and boundaries
+   PASS: Output limits
+ Test 5: File I/O operations
+   PASS: File I/O operations
+STOP 0
+ Test 6: Edge cases and error conditions
+   PASS: Edge cases
+
+ All extended notebook output tests passed!
+ === Notebook System Tests ===
+
+ Test 1: Simple notebook execution...
+Project is up to date
+   PASSED
+ Test 2: Notebook with custom output...
+Project is up to date
+   PASSED
+ Test 3: Notebook with verbose mode...
+Project is up to date
+Running in notebook mode...
+ Cache hit: Using existing notebook build
+Notebook output saved to: test_notebook_verbose.md
+STOP 0
+   PASSED
+ All notebook system tests passed!
+ === Multiple Modules from Same Package Test ===\
+STOP 1
+ Error: pyplot_module not found in registry
+ Warning: Cannot open registry at /tmp/multiple_modules_test_A6B042/test_multiple_registry.toml
+ === Different Directories Tests ===\
+ Test 1: Run from parent directory using absolute path
+ PASS: Absolute path works from different directory
+
+ Test 2: Run from parent directory using relative path
+ PASS: Relative path works from different directory
+
+ Test 3: Run from completely different directory
+ PASS: Works from completely different directory
+
+ All different directory tests passed!
+ === Conflicting Dependencies Tests ===\
+ Warning: Cannot open registry at /tmp/conflicting_deps_test_9BB1B8/registry.toml
+ Warning: Cannot open registry at /tmp/test_conflict_project_9BCD17/registry.toml
+STOP 1
+ Error: Cannot open generated fpm.toml
+PASS: Function signature enhancement (real → real(8))
+PASS: Parameter type enhancement with intent(in)
+PASS: Forward type propagation (variable gets function return type)
+PASS: Multiple functions in single file
+PASS: Mixed explicit and implicit types
+PASS: Nested function calls
+Tests: 6/6 passed
+Files before test:
+-rw-r--r-- 1 ert ert  70 Jul 19 00:03 test_simple_func.f
+-rw-r--r-- 1 ert ert 181 Jul 19 00:03 test_simple_func.f90
+
+Running preprocessor test...
+
+Files after test:
+-rw-r--r-- 1 ert ert  70 Jul 19 00:03 test_simple_func.f
+-rw-r--r-- 1 ert ert 181 Jul 19 00:03 test_simple_func.f90
+/tmp/test_file_isolation_A0893D/file1.txt:
+Content from test 1
+/tmp/test_file_isolation_A0893D/file2.txt:
+Content from test 2
+/tmp/test_file_isolation_A0893D/file3.txt:
+Content from test 3
+ Test 1: Default quiet mode
+ PASS: Quiet mode suppresses FPM output
+
+ Test 2: Verbose mode (-v)
+ PASS: Verbose mode shows FPM output
+
+ Test 3: Very verbose mode (-vv)
+ PASS: Very verbose mode shows detailed output
+
+ All verbose tests passed!
+PASS: Explicit function with parameters gets intent(in)
+PASS: Parameters get intent(in) by default
+PASS: real converts to real(8) for explicitness
+Tests: 3/3 passed
+ === Error Handling Tests ===
+
+ Test 1: Unknown module error message
+STOP 1
+ Error: Expected text "Unable to find source for module dependency" not found in output
+ === Main Application Coverage Tests ===
+
+ Test 1: Help output coverage
+   PASS: Help output
+ Test 2: Normal execution mode coverage
+   PASS: Normal execution mode
+ Test 3: Notebook execution mode coverage
+   WARNING: Notebook output file not created
+   PASS: Notebook execution mode
+ Test 4: Verbose modes coverage
+   PASS: Verbose modes
+ Test 5: Error handling coverage
+STOP 0
+   PASS: Error handling
+
+ All main coverage tests passed!
+STOP 0
+Testing literal round trip...
+PASS: Literal round trip
+Testing assignment round trip...
+PASS: Assignment round trip
+Testing expression round trip...
+PASS: Expression round trip
+All parse and codegen integration tests passed
+ === Figure Capture Unit Tests ===
+
+ Test 1: Initialization and finalization
+   FAIL: Temp directory not created
+ Test 2: Enable/disable functionality
+   PASS
+ Test 3: Base64 encoding functionality
+   PASS
+ Test 4: Figure data retrieval
+   PASS
+ Test 5: Show interceptor functionality
+WARNING: The convert command is deprecated in IMv7, use "magick" instead of "convert" or "magick convert"
+
+   PASS
+STOP 1
+
+ Some figure capture tests failed!
+ === Figure Capture Coverage Tests ===
+
+ Test 1: Figure capture initialization
+   WARNING: Figure directory not created
+   PASS: Initialization
+ Test 2: Figure saving functionality
+   WARNING: Figure counter incorrect
+   PASS: Figure saving
+ Test 3: Show command interception
+WARNING: The convert command is deprecated in IMv7, use "magick" instead of "convert" or "magick convert"
+
+   PASS: Show interception
+ Test 4: Base64 conversion
+   PASS: Base64 conversion
+ Test 5: Cleanup functionality
+STOP 0
+   PASS: Cleanup
+
+ All figure capture coverage tests passed!
+ === Extended Figure Capture Tests ===
+
+ Test 1: Figure directory operations
+   PASS: Directory operations
+ Test 2: Base64 encoding edge cases
+   PASS: Base64 edge cases
+ Test 3: Figure counter behavior
+   PASS: Counter behavior
+ Test 4: Show interceptor edge cases
+ Figure would be displayed here
+WARNING: The convert command is deprecated in IMv7, use "magick" instead of "convert" or "magick convert"
+
+WARNING: The convert command is deprecated in IMv7, use "magick" instead of "convert" or "magick convert"
+
+WARNING: The convert command is deprecated in IMv7, use "magick" instead of "convert" or "magick convert"
+
+   PASS: Interceptor edge cases
+ Test 5: Error conditions and boundary cases
+ Figure would be displayed here
+STOP 0
+   PASS: Error conditions
+
+ All extended figure capture tests passed!
+ Test 1: First run with custom cache directory
+ PASS: Cache directory created
+ PASS: First run shows build output
+
+ Test 2: Second run should use cache
+ PASS: Second run appears to use cache (less output)
+
+ Test 3: Verify program output is consistent
+ PASS: Program output consistent across runs
+
+ All cache tests passed!
+ === Notebook Caching Tests ===
+
+ Test 1: Cache directory creation
+   PASS
+ Test 2: Cache reuse with same content
+   PASS
+ Test 3: Cache invalidation with different content
+   PASS
+STOP 0
+
+ All notebook caching tests passed!
+ Testing cross-platform cache path generation...
+   ✓ Cache path generated: /home/ert/.cache/fortran
+   ✓ Cross-platform path generation successful
+ Testing cross-platform path joining...
+   ✓ Path joining works: cache/builds
+   ✓ Multi-component paths: cache/modules/test_key
+   ✓ Relative paths: ./.fortran-cache
+ All Windows compatibility tests passed!
+ === FPM Cache Integration Tests ===\
+ Test 1: FPM source discovery
+ Creating test directory: /tmp/fpm_test_sources_20250719001045_99E893
+ Creating file: /tmp/fpm_test_sources_20250719001045_99E893/app/test.f90
+ Test file exists: /tmp/fpm_test_sources_20250719001045_99E893/app/test.f90
+ Testing Fortran CLI tool with long path...
+ Test 1 passed: Fortran CLI tool works with long paths
+ PASS: FPM source discovery works, found           1 sources
+
+ Test 2: Source file information access
+ PASS: Can access source file path length:          50
+ PASS: Can access source file path:/tmp/fpm_test_info_20250719001045_A13D73/hello.f90
+ PASS: Fortran CLI tool works with long paths
+ PASS: Test file exists and is accessible
+
+ All FPM cache integration tests passed!
+ === Artifact Cache Tests ===
+ Test 1: Content-based hashing
+ + mkdir -p /home/ert/.cache/fortran                                                                                                                                                                                                                                        /builds
+<ERROR> *mkdir*:directory creation failed
+STOP 1
+Running module cache integration tests...
+
+Test 1: Cache with real module compilation
+  ✓ Module compiled successfully
+ + mkdir -p /home/ert/.cache/fortran/modules/gfortran/13.0.0/0000000000008235
+  ✓ Compiled module cached successfully
+  ✓ Module retrieved from cache with .mod file
+  ✓ Cached module usable in compilation
+Test 2: Cache with module dependencies
+  ✓ Cache keys differ with/without dependencies
+    Without deps: 000000000000D903
+    With deps: 000000000000749F
+Test 3: Cache invalidation on source change
+  ✓ Cache key changes when source is modified
+Test 4: Cross-project module sharing
+ + mkdir -p /home/ert/.cache/fortran/modules/gfortran/13.0.0/0000000000015B38
+  ✓ Module shared between projects via cache
+  ✓ Cached module usable in different project
+STOP 0
+
+All integration tests passed!
+Testing cache lock functionality...
+
+Test 1: Basic lock acquisition and release
+Using cache dir: /tmp/fortran_cache_lock_test_9CC429
+  ✓ Lock acquired successfully
+-rw-r--r-- 1 ert ert 23 Jul 19 00:10 /tmp/fortran_cache_lock_test_9CC429/test_project.lock
+  ✓ Lock is detected as locked
+  ✓ Lock released successfully
+
+Test 2: Lock conflict with no-wait
+  ✓ First lock acquired
+  ✓ Second lock correctly failed with no-wait
+  ✓ Lock released
+
+Test 3: Multiple different project locks
+  ✓ Multiple project locks acquired successfully
+  ✓ All locks released
+
+Test 4: Stale lock cleanup
+  ✓ Stale lock was cleaned up and new lock acquired
+
+All cache lock tests passed!
+Running module cache unit tests...
+
+Test 1: Cache directory creation
+  ✓ Module cache directory path determined
+    Path: /home/ert/.cache/fortran/modules
+Test 2: Cache key generation
+  ✓ Different sources generate different cache keys
+    Key1: 0000000000003039
+    Key2: 0000000000010932
+  ✓ Same source generates consistent cache key
+Test 3: Module storage and retrieval
+ + mkdir -p /home/ert/.cache/fortran/modules/gfortran/13.0.0/000000000001869F
+  ✓ Module stored in cache successfully
+  ✓ Module retrieved from cache successfully
+  ✓ Module file (.mod) retrieved correctly
+Test 4: Cache hit detection
+  ✓ Cache miss detected correctly before storing
+ + mkdir -p /tmp/fortran_cache_hit_9EB8A9/gfortran/13.0.0/0000000000002B67
+  ✓ Cache hit detected correctly after storing
+Test 5: Disabled cache behavior
+  ✓ Cache enabled (no disable env var)
+ + mkdir -p /home/ert/.cache/fortran/modules/gfortran/13.0.0/00000000000056CE
+  ✓ Cache operations completed without error
+STOP 0
+
+All unit tests passed!
+ PASS: Verbose level mapping
+ PASS: Log level filtering
+ PASS: Debug categories enabled correctly
+
+Tests: 3/3 passed
+STOP 0
+ Testing: JSON tokens -> parser -> AST -> code
+ - Loaded            4  tokens from JSON
+ - Parsed tokens to AST
+ - Generated code: 'y = 5.5d0'
+ PASS: Complete JSON -> tokens -> parser -> code workflow
+
+ Testing: JSON AST -> codegen
+ - Loaded AST from JSON
+ - Generated code:
+ program test
+    implicit none
+    real(8) :: result
+
+    result = x * 2
+end program test
+ PASS: JSON AST -> code generation workflow
+ All JSON workflow tests passed!
+STOP 0
+ === Frontend API Comprehensive Tests ===
+
+ Testing lexer API...
+   PASS: Simple assignment tokenization
+   PASS: Operator tokenization
+   PASS: Keyword tokenization
+ Testing parser API...
+   PASS: Assignment parsing
+   WARN: Binary operation parsed as different node type
+   PASS: Literal parsing
+ Testing semantic analyzer API...
+   PASS: Semantic analysis completed
+ Testing code generation API...
+   PASS: Assignment code generation
+   PASS: Program code generation
+ Testing end-to-end API workflow...
+   PASS: End-to-end API workflow
+
+ All frontend API tests passed!
+15
+ === Frontend Test Cases ===
+ Found          15 test cases inexample/frontend_test_cases
+
+ FAIL: example - Cannot create output file: /tmp/frontend_test_9FFD34/test_example_actual.f90
+ FAIL: function_call_inference - Cannot create output file: /tmp/frontend_test_A01893/test_function_call_inference_actual.f90
+ FAIL: function_def - Cannot create output file: /tmp/frontend_test_A033F2/test_function_def_actual.f90
+ FAIL: function_with_param - Cannot create output file: /tmp/frontend_test_A04B68/test_function_with_param_actual.f90
+ FAIL: json_workflow - Cannot create output file: /tmp/frontend_test_A062DE/test_json_workflow_actual.f90
+ FAIL: multi_statement - Cannot create output file: /tmp/frontend_test_A07A54/test_multi_statement_actual.f90
+ FAIL: multiple_functions - Cannot create output file: /tmp/frontend_test_A095B3/test_multiple_functions_actual.f90
+ FAIL: multiple_statements - Cannot create output file: /tmp/frontend_test_A0A940/test_multiple_statements_actual.f90
+ FAIL: nested_function_calls - Cannot create output file: /tmp/frontend_test_A0C0B6/test_nested_function_calls_actual.f90
+ FAIL: print_statement - Cannot create output file: /tmp/frontend_test_A0D82C/test_print_statement_actual.f90
+ FAIL: simple_assignment - Cannot create output file: /tmp/frontend_test_A0EFA2/test_simple_assignment_actual.f90
+ FAIL: single_assignment - Cannot create output file: /tmp/frontend_test_A10B01/test_single_assignment_actual.f90
+ FAIL: single_function_in_program - Cannot create output file: /tmp/frontend_test_A12277/test_single_function_in_program_actual.f90
+ FAIL: single_real_declaration - Cannot create output file: /tmp/frontend_test_A139ED/test_single_real_declaration_actual.f90
+STOP 1
+ FAIL: use_statement - Cannot create output file: /tmp/frontend_test_A15163/test_use_statement_actual.f90
+
+ === Summary ===
+Tests: 0/15 passed
+FAILED: 15 tests failed
+ Testing Simple Fortran file detection...
+   ✓ File detection works correctly
+ Testing basic compilation...
+   ✓ Basic compilation works
+ All frontend basic tests passed!
+ All type substitution tests passed!
+PASS: Integer addition
+PASS: Real addition
+PASS: Mixed multiplication
+PASS: Integer/Real division
+PASS: Real power with integer
+PASS: sqrt() return type
+PASS: sin() return type
+PASS: abs() with integer
+PASS: abs() with real
+PASS: max() with multiple reals
+PASS: min() with integers
+PASS: String concatenation
+PASS: Variable + literal concat
+PASS: trim() return type
+PASS: len() return type
+PASS: Logical AND
+PASS: Logical NOT
+PASS: Integer comparison
+PASS: Real equality
+PASS: String comparison
+Tests: 20/20 passed
+PASS: Integer array literal
+PASS: Single element array
+PASS: Real array literal
+PASS: Mixed int/real array
+PASS: String array literal
+PASS: Logical array literal
+PASS: Large array size detection
+PASS: Empty array detection
+PASS: 2D array literal
+PASS: 3D array (skip for now)
+PASS: sum() return type
+PASS: Array average calculation
+PASS: size() return type
+PASS: Array element access
+PASS: 2D array element access
+PASS: Array constructor
+PASS: Expression in constructor
+PASS: Array slice
+PASS: Complex slicing
+Tests: 19/19 passed
+=== Type Inference Integration Tests ===
+
+Test 1: Basic type inference integration
+  ✓ PASS: Basic type inference generates correct declarations
+Test 2: Arithmetic expressions integration
+  ✓ PASS: Arithmetic expressions correctly inferred
+Test 3: Mixed type expressions integration
+  ✓ PASS: Mixed type promotion works correctly
+Test 4: Intrinsic functions integration
+  ✓ PASS: Intrinsic function return types correctly inferred
+Test 5: Print statement filtering
+  ✓ PASS: Print statements correctly filtered
+
+Type inference integration tests: 5/5 passed
+PASS: Function parameter inference from usage
+PASS: Function parameter from integer literal
+PASS: Multiple parameter inference
+PASS: Mixed parameter types promote to real
+PASS: Arithmetic return type
+PASS: Logical return type
+PASS: String return type
+PASS: Conditional return analysis
+PASS: Intrinsic function return
+PASS: Nested function call inference
+PASS: Multiple nested calls
+PASS: Recursive function analysis
+PASS: Complex recursion
+PASS: Function result assignment
+PASS: Function in initialization
+PASS: Functions in expressions
+PASS: Function comparison
+PASS: Function as parameter
+Tests: 18/18 passed
+STOP 0
+ Testing semantic context creation...
+ PASS: Semantic context created successfully
+ next_var_id =           1
+STOP 0
+ === Semantic Analyzer API Unit Tests ===
+
+ Testing assignment analysis...
+   PASS: Assignment analysis
+ Testing type inference...
+   PASS: Type inference performed
+ Testing variable analysis...
+   PASS: Variable analysis
+ Testing expression analysis...
+   PASS: Expression analysis
+ Testing error detection...
+   PASS: Error detection test completed
+
+ All semantic analyzer API tests passed!
+STOP 0
+ === Lexer API Unit Tests ===
+
+ Testing identifier tokenization...
+   PASS: Identifier tokenization
+ Testing number tokenization...
+   PASS: Number tokenization
+ Testing operator tokenization...
+   PASS: Operator tokenization
+ Testing keyword tokenization...
+   PASS: Keyword tokenization
+ Testing string tokenization...
+   PASS: String tokenization
+ Testing comment handling...
+   PASS: Comment handling (implementation-dependent)
+   PASS: Code with comment
+
+ All lexer API tests passed!
+STOP 0
+Testing integer literal tokenization...
+PASS: Integer literal tokenization
+Testing real literal tokenization...
+PASS: Real literal tokenization
+Testing scientific notation tokenization...
+PASS: Scientific notation tokenization
+Testing number tokenization edge cases...
+PASS: Number tokenization edge cases
+All number tokenization tests passed
+STOP 0
+Testing complex expression serialization...
+PASS: Complex expression serialization
+Testing program structure serialization...
+PASS: Program structure serialization
+Testing special characters serialization...
+PASS: Special characters serialization
+Testing large input serialization...
+PASS: Large input serialization
+All comprehensive serialization tests passed
+STOP 0
+ Testing: 'x = 1'
+ PASS: Simple assignment tokenized correctly
+ All lexer assignment tests passed!
+STOP 0
+Testing program structure keyword tokenization...
+PASS: Program structure keyword tokenization
+Testing control flow keyword tokenization...
+PASS: Control flow keyword tokenization
+Testing type keyword tokenization...
+PASS: Type keyword tokenization
+Testing I/O keyword tokenization...
+PASS: I/O keyword tokenization
+Testing case-insensitive keyword recognition...
+PASS: Case-insensitive keyword recognition
+All keyword tokenization tests passed
+STOP 0
+Testing arithmetic operator tokenization...
+PASS: Arithmetic operator tokenization
+Testing comparison operator tokenization...
+PASS: Comparison operator tokenization
+Testing assignment operator tokenization...
+PASS: Assignment operator tokenization
+Testing delimiter tokenization...
+PASS: Delimiter tokenization
+All operator tokenization tests passed
+STOP 0
+ Testing: Parse assignment from JSON tokens
+ PASS: Got assignment node from JSON tokens
+ PASS: Target is 'x'
+ PASS: Value is '42'
+ All parser JSON tests passed!
+ DEBUG: Testing single declaration 'real :: x'
+ DEBUG: Tokens created:            4
+ DEBUG: Statement allocated successfully
+ PASS: Single declaration parsed correctly
+ PASS: Multiple declarations return non-literal node
+ PASS: Declaration with initialization returns non-literal node
+ All parser declaration tests passed!
+STOP 0
+Testing simple literal parsing...
+PASS: Simple literal parsing
+Testing simple identifier parsing...
+PASS: Simple identifier parsing
+Testing simple assignment parsing...
+PASS: Simple assignment parsing
+All basic parser tests passed
+STOP 0
+ Testing: 'real :: x'
+ PASS: Declaration properly parsed as declaration_node
+ All parser declaration tests passed!
+ Test 1: Simple do loop parsing
+   ✓ PASS: Do loop variable parsed correctly
+ Test 2: Do loop boundary detection
+   ✓ PASS: Do loop boundary detected correctly
+ DO LOOP PARSER TESTS:            2  of            2  passed
+ Testing basic do while loop parsing...
+   ✓ Parsed as do_while_node
+   ✓ Has condition
+ Do while parser tests:
+   Passed:           2
+   Failed:           0
+ All tests passed!
+STOP 0
+ Testing: 'x = 1'
+ PASS: Got assignment node
+ PASS: Target is identifier 'x'
+ PASS: Value is literal '1'
+ All parser assignment tests passed!
+STOP 0
+ === Parser API Unit Tests ===
+
+ Testing assignment parsing...
+   PASS: Simple assignment parsing
+   PASS: Assignment with expression parsing
+ Testing binary operation parsing...
+   PASS: Addition parsing
+   PASS: Multiplication parsing
+ Testing literal parsing...
+   PASS: Integer literal parsing
+   PASS: Real literal parsing
+ Testing identifier parsing...
+   PASS: Identifier parsing
+ Testing print statement parsing...
+   PASS: Print statement parsing
+ Testing declaration parsing...
+   PASS: Declaration parsing
+
+ All parser API tests passed!
+STOP 0
+Testing simple addition parsing...
+PASS: Simple addition parsing
+Testing multiplication precedence parsing...
+PASS: Multiplication precedence parsing
+Testing parentheses precedence parsing...
+PASS: Parentheses precedence parsing
+Testing comparison operator parsing...
+PASS: Comparison operator parsing
+All binary operation parsing tests passed
+STOP 0
+ Testing: AST from JSON - simple assignment
+ Generated code: 'program main
+    implicit none
+    integer :: x
+
+    x = 42
+end program main'
+ PASS: Got program node
+ PASS: Program has 1 statement
+ PASS: First statement is assignment
+
+ Testing: AST from JSON - binary operation
+ PASS: Got binary_op node
+ PASS: Operator is '+'
+ PASS: Left operand is 'a'
+ PASS: Right operand is '2'
+ All AST JSON tests passed!
+PASS: Simplest function definition - no compilation errors
+PASS: Simplest function definition - generates valid Fortran
+Tests: 2/2 passed
+STOP 0
+Testing nested binary operations...
+PASS: Nested binary operations
+Testing parentheses generation...
+PASS: Parentheses test (basic functionality)
+Testing complex expression generation...
+PASS: Complex expression generation
+All expression code generation tests passed
+STOP 0
+Testing statement code generation...
+PASS: Statement generation
+Testing use statement generation...
+PASS: Use statement generation
+Testing print statement generation...
+PASS: Print statement generation
+All program code generation tests passed
+STOP 0
+ === Code Generation API Unit Tests ===
+
+ Testing assignment code generation...
+   PASS: Assignment code generation
+     Generated:x = 42
+ Testing literal code generation...
+   PASS: Integer literal code generation
+   PASS: Real literal code generation
+ Testing binary operation code generation...
+   PASS: Binary operation code generation
+     Generated:a + b
+ Testing print statement code generation...
+   PASS: Print statement code generation
+     Generated:print *, result
+ Testing program code generation...
+   PASS: Program code generation
+     Generated length:         102 characters
+ Testing identifier code generation...
+   PASS: Identifier code generation
+     Generated:variable_name
+
+ All code generation API tests passed!
+STOP 0
+Testing literal code generation...
+PASS: Literal code generation
+Testing identifier code generation...
+PASS: Identifier code generation
+Testing assignment code generation...
+PASS: Assignment code generation
+Testing binary operation code generation...
+PASS: Binary operation code generation
+All basic code generation tests passed
+STOP 0
+ Testing: Code generation from AST (simulated JSON input)
+ PASS: Generated code from 'AST': 'y = 3.14d0'
+ NOTE: Full JSON->AST deserialization still needs implementation
+ All codegen JSON tests passed!
+STOP 0
+ Testing: assignment code generation for 'x = 1'
+ PASS: Generated code is correct: 'x = 1'
+ All codegen assignment tests passed!
+ === Extended Config Tests ===
+
+ Test 1: Config directory with different environment variables
+   WARNING: XDG_CONFIG_HOME test may not work properly
+   WARNING: HOME test may not work properly
+   PASS: Environment variable handling
+ Test 2: Config directory creation edge cases
+mkdir: cannot create directory ‘/dev/null’: Not a directory
+mkdir: cannot create directory ‘’: No such file or directory
+   PASS: Directory creation edge cases
+ Test 3: Registry path construction
+   PASS: Registry path construction
+ Test 4: Windows path handling
+   WARNING: Windows path fallback may not work properly
+   PASS: Windows path handling
+ Test 5: Fallback scenarios
+   WARNING: Ultimate fallback should use .fortran-config
+STOP 0
+   PASS: Fallback scenarios
+
+ All extended config tests passed!
+STOP 0
+Testing --clear-cache option...
+PASS: --clear-cache option (mock test - actual CLI functionality works)
+Testing --cache-info option...
+PASS: --cache-info option (mock test - actual CLI functionality works)
+Testing --clear-cache with file...
+PASS: --clear-cache with file (mock test - actual CLI functionality works)
+All CLI cache tests passed
+ === System CLI Tests ===
+
+ Created test file: /tmp/test_cli_sys_A41137/test_cli_system.f90
+ Test 1: No arguments (should show help)
+ PASS: No arguments shows help
+
+ Test 2: --help flag
+ PASS: --help flag works
+
+ Test 3: -h flag
+ PASS: -h flag works
+
+ Test 4: Basic execution
+ Executing command: fpm run fortran -- "/tmp/test_cli_sys_A41137/test_cli_system.f90" > "/tmp/test_basic_exec_A2098D/cli_test_output.txt" 2>&1; echo $? > "/tmp/test_basic_exec_A2098D/cli_test_exit.txt"
+ DEBUG: Contents of output file: /tmp/test_basic_exec_A2098D/cli_test_output.txt
+ DEBUG: Project is up to date
+ DEBUG: /home/ert/.cache/fortran/test_cli_system_simple_test_cli_system.f90/build/gfortran_E34ED9D522D08DD2/test_cli_system/app_main.f90.o
+ DEBUG:  CLI System Test Output
+ DEBUG: End of output file
+ PASS: Basic execution works
+
+ Test 5: -v flag (cold and warm cache)
+   Test 5a: Cold cache behavior
+   PASS: Cold cache shows build output
+   Test 5b: Warm cache behavior
+   PASS: Warm cache shows cache hit
+ PASS: -v flag works for both cache states
+
+ Test 6: -vv flag
+ PASS: -vv flag works
+
+ Test 7: --verbose flag (no argument)
+ PASS: --verbose flag works
+
+ Test 8: --verbose 1
+ PASS: --verbose 1 works
+
+ Test 9: --verbose 2
+ PASS: --verbose 2 works
+
+ Test 10: --cache-dir
+ PASS: --cache-dir works
+
+ Test 11: --config-dir
+ PASS: --config-dir works
+
+ Test 12: Invalid arguments
+ PASS: Invalid arguments handled correctly
+
+ Test 13: .f file execution
+ PASS: .f file executed successfully
+ Test 14: Invalid file extension
+ PASS: Invalid extension rejected
+ Test 15: --flag option functionality
+ PASS: --flag option works with .f90 files
+   Testing .f file with --flag option
+ PASS: --flag option works with .f files
+ Cleaned up test files
+
+ All system CLI tests passed!
+STOP 0
+ === CLI Debug Arguments Tests ===
+
+ Testing --debug-tokens flag...
+(Testing with 3 arguments)
+ PASS: --debug-tokens flag works
+ Testing --debug-ast flag...
+(Testing with 3 arguments)
+ PASS: --debug-ast flag works
+ Testing --debug-codegen flag...
+(Testing with 3 arguments)
+ PASS: --debug-codegen flag works
+ Testing multiple debug flags...
+(Testing with 6 arguments)
+ PASS: Multiple debug flags work
+ Testing JSON input flags...
+(Testing with 3 arguments)
+(Testing with 3 arguments)
+(Testing with 3 arguments)
+ PASS: All JSON input flags work correctly
+
+ All CLI debug tests passed!
+ === Comprehensive CLI Tests ===
+
+ Test 1: Empty arguments
+   PASS: Empty arguments trigger help
+ Test 2: Help arguments
+   PASS: Help arguments work correctly
+ Test 3: Verbose arguments
+   PASS: All verbose arguments work correctly
+ Test 4: Directory arguments
+   PASS: Directory arguments work correctly
+ Test 5: Parallel arguments
+   PASS: Parallel arguments work correctly
+ Test 6: Notebook arguments
+   PASS: Notebook arguments work correctly
+ Test 7: Complex argument combinations
+   PASS: Complex argument combinations work correctly
+ Test 8: Edge cases
+   PASS: Edge cases handled correctly
+
+ All comprehensive CLI tests PASSED!
+ === CLI Integration Tests ===
+
+ Testing basic file processing...
+   FAIL: Basic file processing failed with exit code           1
+ Testing debug output pipeline...
+   FAIL: --debug-tokens failed
+ Testing JSON pipeline workflow...
+   PARTIAL: --from-tokens pipeline returned exit code           1 (expected for empty tokens)
+   PARTIAL: --from-ast pipeline returned exit code         139 (expected for minimal AST)
+ Testing error handling...
+   PASS: Non-existent file properly handled
+   PASS: Invalid JSON properly handled
+STOP 1
+
+ Some CLI integration tests failed!
+ === CLI JSON Options Tests ===
+
+ Testing JSON pipeline functionality...
+   Testing --from-tokens...
+Project is up to date
+STOP 0
+Generated Fortran code written to: /tmp/test_tokens.f90
+     PASS: --from-tokens executed successfully
+   Testing --from-ast...
+Project is up to date
+STOP 0
+Generated Fortran code written to: /tmp/test_ast.f90
+     PASS: --from-ast executed successfully
+   Testing --from-semantic...
+Project is up to date
+STOP 0
+Generated Fortran code written to: /tmp/test_semantic.f90
+     PASS: --from-semantic executed successfully
+STOP 0
+
+ All CLI JSON option tests passed!
+=== Standard Fortran 95 Passthrough Tests ===
+
+Test 1: Simple program passthrough
+  ✓ PASS: Simple program preserved
+Test 2: Module passthrough
+  ✓ PASS: Module preserved
+Test 3: Complex program with arrays and loops
+  ✓ PASS: Complex program preserved
+
+Fortran 95 passthrough tests: 3/3 passed
+ === Comprehensive Registry Resolver Tests ===
+
+ Test 1: Registry creation
+ Created default registry at: /tmp/test_registry_config_A784DE/registry.toml
+   PASS: Registry creation works correctly
+ Test 2: Registry loading
+   PASS: Registry loading works correctly
+ Test 3: Module resolution
+   PASS: Module resolution works correctly
+ Test 4: Version resolution
+   PASS: Version resolution works correctly
+ Test 5: Registry validation
+   PASS: Registry validation works correctly
+ Test 6: Custom registry paths
+   PASS: Custom registry paths work correctly
+ Test 7: Prefix matching
+   PASS: Prefix matching works correctly
+ Test 8: Underscore inference
+   PASS: Underscore inference works correctly
+ Test 9: Error handling
+ Warning: Cannot open registry at /tmp/definitely_nonexistent_registry.toml
+mkdir: cannot create directory ‘/dev/null’: Not a directory
+ Error: Cannot create config directory: /dev/null/invalid_path
+   PASS: Error handling works correctly
+ Test 10: Edge cases
+   PASS: Edge cases handled correctly
+
+ All comprehensive registry resolver tests PASSED!
+ === Registry Validation Tests ===\
+ Test 1: Valid registry
+ PASS: Valid registry loaded successfully
+
+ Test 2: Invalid TOML syntax
+ PASS: Invalid syntax detected: Package section found before [packages] section at line 5
+
+ Test 3: Missing required fields
+ PASS: Missing fields handled gracefully (optional fields)
+
+ Test 4: Empty registry
+ PASS: Empty registry handled gracefully
+
+ All registry validation tests passed!
+ === Version Constraints Tests ===\
+ PASS: pyplot_module -> pyplot-fortran v1.0.0
+ PASS: fortplot_test -> fortplotlib (no version)
+ All version constraint tests passed!
+ === Registry Enhancement Tests ===\
+
+ Test 1: Multiple modules from same package
+STOP 1
+ Error: pyplot-fortran dependency not found in generated fpm.toml
+ === Registry Resolver Tests ===
+
+ Test 1: Module with prefix (fortplot)
+ PASS: fortplot -> fortplotlib
+
+ Test 2: Module with prefix (fortplot_utils)
+ PASS: fortplot_utils -> fortplotlib (via prefix)
+
+ Test 3: Module with underscore (pyplot_module)
+ PASS: pyplot_module -> pyplot-fortran
+
+ Test 4: Unknown module
+ PASS: Unknown module correctly not found
+
+ Test 5: Git URL retrieval
+ PASS: Correct git URL retrieved
+
+ All registry resolver tests passed!
+ === Module Scanner Tests ===
+
+ Test 1: Simple module detection
+ PASS: Found both modules
+
+ Test 2: Module with only clause
+ PASS: Correctly extracted module from only clause
+
+ Test 3: Intrinsic module filtering
+ PASS: Intrinsic modules correctly filtered
+
+ All module scanner tests passed!
+ === Extended Module Scanner Tests ===
+
+ Test 1: Complex use statements
+   WARNING: my_module not found
+   PASS: Complex use statements
+ Test 2: Edge case formatting
+   WARNING: Expected to find 4 modules, found           2
+   PASS: Edge case formatting
+ Test 3: Intrinsic module filtering
+   PASS: Intrinsic module filtering
+ Test 4: Error conditions and edge cases
+ Error: Cannot open file /tmp/definitely_nonexistent_file.f90
+   PASS: Error conditions
+ Test 5: Duplicate module handling
+STOP 0
+   PASS: Duplicate module handling
+
+ All extended module scanner tests passed!
+=============================================================
+Running Fortran CLI Example Tests
+=============================================================
+
+Running: example/hello/hello.f90...
+  ✓ PASS: example/hello/hello.f90 (exit code 0)
+
+Running: example/hello/hello.f...
+  ✓ PASS: example/hello/hello.f (exit code 0)
+
+Running: example/calculator/calculator.f90...
+  ✓ PASS: example/calculator/calculator.f90 (exit code 0)
+    ✓ Calculator output correct
+
+Running: example/calculator/calculator.f...
+  ✓ PASS: example/calculator/calculator.f (exit code 0)
+    ✓ Calculator output correct
+
+Running: example/precision/precision_test.f90...
+  ✓ PASS: example/precision/precision_test.f90 (exit code 0)
+
+Running: example/precision/precision_test.f...
+  ✓ PASS: example/precision/precision_test.f (exit code 0)
+
+Running: example/precision/precision_compare.f90...
+  ✓ PASS: example/precision/precision_compare.f90 (exit code 0)
+
+Running: example/precision/precision_compare.f...
+  ✓ PASS: example/precision/precision_compare.f (exit code 0)
+
+Running: example/precision/real_default_test.f90...
+  ✓ PASS: example/precision/real_default_test.f90 (exit code 0)
+    ✓ Standard single precision confirmed (.f90)
+
+Running: example/precision/real_default_test.f...
+  ✓ PASS: example/precision/real_default_test.f (exit code 0)
+    ✓ Opinionated double precision confirmed (.f)
+
+Running: example/interdependent/main.f90...
+  ✓ PASS: example/interdependent/main.f90 (exit code 0)
+    ✓ Interdependent modules working correctly
+
+Running: example/interdependent/main.f...
+  ✓ PASS: example/interdependent/main.f (exit code 0)
+    WARNING: Interdependent modules may not be working
+
+Running: example/type_inference/calculate.f90...
+  ✓ PASS: example/type_inference/calculate.f90 (exit code 0)
+    ✓ Type inference example output correct
+
+Running: example/type_inference/calculate.f...
+  ✓ PASS: example/type_inference/calculate.f (exit code 0)
+    ✓ Type inference example output correct
+
+Running: example/type_inference/all_types.f90...
+  ✓ PASS: example/type_inference/all_types.f90 (exit code 0)
+    ✓ All type inference working correctly
+
+Running: example/type_inference/all_types.f...
+  ✓ PASS: example/type_inference/all_types.f (exit code 0)
+    WARNING: Type inference for all types may not be working
+
+Running: example/advanced_inference/arrays.f90...
+  ✓ PASS: example/advanced_inference/arrays.f90 (exit code 0)
+    ✓ Array inference working correctly
+
+Running: example/advanced_inference/arrays.f...
+  ⚠ EXPECTED FAIL: example/advanced_inference/arrays.f (exit code 1) - Known preprocessor issue
+
+Running: example/advanced_inference/derived_types.f90...
+  ✓ PASS: example/advanced_inference/derived_types.f90 (exit code 0)
+
+Running: example/advanced_inference/derived_types.f...
+  ⚠ EXPECTED FAIL: example/advanced_inference/derived_types.f (exit code 1) - Known preprocessor issue
+
+Running: example/notebook/simple_math.f90...
+  ✓ PASS: example/notebook/simple_math.f90 (exit code 0)
+    ✓ Notebook math example working correctly
+
+Running: example/notebook/simple_math.f...
+  ✓ PASS: example/notebook/simple_math.f (exit code 0)
+    ✓ Notebook math example working correctly
+
+Running: example/notebook/arrays_loops.f90...
+  ✓ PASS: example/notebook/arrays_loops.f90 (exit code 0)
+
+Running: example/notebook/arrays_loops_simple.f...
+  ⚠ EXPECTED FAIL: example/notebook/arrays_loops_simple.f (exit code 1) - Known preprocessor issue
+
+Running: example/notebook/control_flow.f90...
+  ✓ PASS: example/notebook/control_flow.f90 (exit code 0)
+
+Running: example/notebook/control_flow_simple.f...
+  ✓ PASS: example/notebook/control_flow_simple.f (exit code 0)
+
+Running: example/step1_explicit_types/step1_demo.f90...
+  ✓ PASS: example/step1_explicit_types/step1_demo.f90 (exit code 0)
+    ✓ Step 1 explicit types working correctly
+
+Running: example/step1_explicit_types/step1_demo.f...
+  ✓ PASS: example/step1_explicit_types/step1_demo.f (exit code 0)
+    ✓ Step 1 explicit types working correctly
+
+Running: example/advanced_inference/function_returns.f90...
+  ✓ PASS: example/advanced_inference/function_returns.f90 (exit code 0)
+    WARNING: Function returns inference may not be working
+
+Running: example/advanced_inference/function_returns.f...
+  ⚠ EXPECTED FAIL: example/advanced_inference/function_returns.f (exit code 1) - Known preprocessor issue
+
+Running: example/advanced_inference/intrinsic_functions.f90...
+  ✓ PASS: example/advanced_inference/intrinsic_functions.f90 (exit code 0)
+    ✓ Intrinsic functions example working
+
+Running: example/advanced_inference/intrinsic_functions.f...
+  ✓ PASS: example/advanced_inference/intrinsic_functions.f (exit code 0)
+    ✓ Intrinsic functions example working
+
+Running: example/plotting/plot_demo.f90...
+  ✓ PASS: example/plotting/plot_demo.f90 (exit code 0)
+
+=============================================================
+Testing Incremental Compilation (Caching)
+=============================================================
+
+Using temporary cache: /tmp/fortran_test_cache_B4126C
+First run (should compile)...
+  ✓ First run compiled files as expected
+  ✓ Cache miss detected on first run
+Second run (should use cache)...
+  ✓ Cache hit detected on second run
+  ✓ FPM detected no compilation needed
+  ✓ No compilation occurred on second run
+  ✓ PASS: Incremental compilation working correctly
+Cleaned up temporary cache directory
+
+=============================================================
+Testing Source Modification with Cached Dependencies
+=============================================================
+
+Using temporary cache: /tmp/fortran_test_cache_B19D46
+Using temporary source: /tmp/fortran_test_source_B1A901/main.f90
+First run (should compile everything)...
+  ✓ First run compiled files as expected
+Second run (should use cache completely)...
+  ✓ Cache hit detected on second run
+  ✓ FPM detected no compilation needed on second run
+Modifying source file...
+Third run (should compile only modified file)...
+  ✓ Cache hit detected on third run (reusing project)
+  ✓ FPM detected file changes and recompiled
+  ✓ Incremental compilation occurred
+  ✓ PASS: Source modification with cached dependencies working correctly
+Cleaned up temporary files and cache directory
+
+=============================================================
+Testing Complex Dependency Changes
+=============================================================
+
+Using temporary cache: /tmp/fortran_complex_dep_cache_A877DD
+Using temporary source: /tmp/fortran_complex_dep_source_A88398
+Test 1: Initial compilation with dependencies...
+  ✓ Initial compilation successful
+Test 2: Modifying dependency module...
+  ✓ Dependency change created new cache (expected behavior)
+  ✓ Recompilation occurred for changed dependency
+Test 3: Adding new dependency...
+  ✓ PASS: Complex dependency changes handled correctly
+Cleaned up temporary directories
+
+=============================================================
+Testing .f to .f90 Preprocessor Output Correctness
+=============================================================
+
+Using temporary cache: /tmp/fortran_preproc_test_B04657
+Testing: example/hello/hello.f vs example/hello/hello.f90
+  ✓ PASS: Outputs match
+Testing: example/calculator/calculator.f vs example/calculator/calculator.f90
+  ⚠ EXPECTED FAIL: example/calculator/calculator.f failed to run (known preprocessor issue)
+Testing: example/type_inference/calculate.f vs example/type_inference/calculate.f90
+  ✓ PASS: Outputs match
+Testing: example/type_inference/all_types.f vs example/type_inference/all_types.f90
+  ✓ PASS: Outputs match
+Cleaned up temporary cache directory
+
+=============================================================
+Test Summary
+=============================================================
+Total tests: 39
+Passed: 35
+Failed: 0
+Expected failures: 4
+
+OVERALL: PASSED (with expected failures in .f preprocessor)
+<ERROR> Execution for object " test_renderer_simple " returned exit code  1
+<ERROR> Execution for object " test_notebook_system_end2end " returned exit code  1
+<ERROR> Execution for object " test_multiple_modules " returned exit code  1
+<ERROR> Execution for object " test_conflicting_dependencies " returned exit code  1
+<ERROR> Execution for object " test_error_handling " returned exit code  1
+<ERROR> Execution for object " test_figure_capture " returned exit code  1
+<ERROR> Execution for object " test_artifact_cache " returned exit code  1
+<ERROR> Execution for object " test_frontend_test_cases " returned exit code  1
+<ERROR> Execution for object " test_cli_integration " returned exit code  1
+<ERROR> Execution for object " test_registry_enhancement " returned exit code  1
+<ERROR> *cmd_run*:stopping due to failed executions
+STOP 1

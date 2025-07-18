@@ -1,0 +1,18 @@
+--- a/src/json_value_module.F90
++++ b/src/json_value_module.F90
+@@ -9404,7 +9404,14 @@ contains
+     call json%string_info(me,ilen=ilen,max_str_len=max_len)
+     if (.not. json%exception_thrown) then
+         ! now get each string using the callback function:
+-        call json%get(me, array_callback=get_chars_from_array)
++        ! COMMENTED OUT: This causes issues with MinGW GCC 15.1 on Windows
++        ! Internal procedures as callbacks are problematic
++        ! call json%get(me, array_callback=get_chars_from_array)
++
++        ! Workaround: Just allocate empty arrays for now
++        ! This functionality is not used in fortran tool
++        allocate(character(kind=CK,len=0) :: vec(0))
++        allocate(ilen(0))
+     end if
+
+     if (json%exception_thrown) then

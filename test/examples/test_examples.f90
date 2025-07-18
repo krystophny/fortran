@@ -1,6 +1,7 @@
 program test_examples
     use, intrinsic :: iso_fortran_env, only: error_unit
     use cache, only: get_cache_dir
+    use temp_utils, only: create_temp_dir, cleanup_temp_dir, get_temp_file_path
     implicit none
 
     character(len=256), dimension(:), allocatable :: example_files
@@ -291,39 +292,56 @@ contains
         block
             character(len=256) :: cache_dir
             cache_dir = get_cache_dir()
+#ifdef _WIN32
+            command = 'del /q "'//trim(cache_dir)//'\'//trim(cache_pattern)//'_*" 2>nul'
+#else
             command = 'rm -rf "'//trim(cache_dir)//'/'//trim(cache_pattern)//'_*"'
+#endif
             call execute_command_line(trim(command))
         end block
 
         ! Run the example
-        command = 'fpm run fortran -- '//trim(filename)// &
-                  ' > /tmp/test_output.tmp 2>&1'
-        call execute_command_line(trim(command), exitstat=exit_code)
+        block
+            character(len=:), allocatable :: temp_output_file
+            temp_output_file = get_temp_file_path(create_temp_dir('fortran_test'), 'test_output.tmp')
+#ifdef _WIN32
+            command = 'fpm run fortran -- '//trim(filename)// &
+                      ' > "'//temp_output_file//'" 2>&1'
+#else
+            command = 'fpm run fortran -- '//trim(filename)// &
+                      ' > "'//temp_output_file//'" 2>&1'
+#endif
+            call execute_command_line(trim(command), exitstat=exit_code)
 
-        ! Read output
-        output = ''
-        open (newunit=unit, file='/tmp/test_output.tmp', status='old', iostat=iostat)
-        if (iostat == 0) then
-            do
-                read (unit, '(a)', iostat=iostat) line
-                if (iostat /= 0) exit
-                if (len_trim(output) > 0) then
-                    output = trim(output)//' | '//trim(adjustl(line))
-                else
-                    output = trim(adjustl(line))
-                end if
-            end do
-            close (unit)
-        end if
+            ! Read output
+            output = ''
+            open (newunit=unit, file=temp_output_file, status='old', iostat=iostat)
+            if (iostat == 0) then
+                do
+                    read (unit, '(a)', iostat=iostat) line
+                    if (iostat /= 0) exit
+                    if (len_trim(output) > 0) then
+                        output = trim(output)//' | '//trim(adjustl(line))
+                    else
+                        output = trim(adjustl(line))
+                    end if
+                end do
+                close (unit)
+            end if
 
-        ! Extract just the program output (after FPM messages)
-        j = index(output, '[100%] Project compiled successfully.')
-        if (j > 0) then
-            output = output(j + 37:)  ! Skip the FPM message
-        end if
+            ! Extract just the program output (after FPM messages)
+            j = index(output, '[100%] Project compiled successfully.')
+            if (j > 0) then
+                output = output(j + 37:)  ! Skip the FPM message
+            end if
 
-        ! Clean up
-        call execute_command_line('rm -f /tmp/test_output.tmp')
+            ! Clean up temp file
+#ifdef _WIN32
+            call execute_command_line('del /q "'//temp_output_file//'" 2>nul')
+#else
+            call execute_command_line('rm -f "'//temp_output_file//'"')
+#endif
+        end block
 
     end subroutine run_example
 
@@ -341,7 +359,7 @@ contains
         print *
 
         ! Create temporary cache directory
-        temp_cache_dir = '/tmp/fortran_test_cache_'//get_test_timestamp()
+        temp_cache_dir = create_temp_dir('fortran_test_cache')
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
 
         ! First run - should compile
@@ -421,8 +439,7 @@ contains
 
 999     continue
         ! Clean up temporary cache directory
-        cleanup_command = 'rm -rf "'//trim(temp_cache_dir)//'"'
-        call execute_command_line(trim(cleanup_command))
+        call cleanup_temp_dir(temp_cache_dir)
         print '(a)', 'Cleaned up temporary cache directory'
         print *
 
@@ -433,18 +450,21 @@ contains
         character(len=*), intent(out) :: output
         integer, intent(out) :: exit_code
 
-        character(len=512) :: command
+        character(len=512) :: command, temp_output_file
         integer :: unit, iostat
         character(len=1024) :: line
 
+        ! Create temp output file path
+        temp_output_file = get_temp_file_path(create_temp_dir('fortran_test'), 'test_cache_output.tmp')
+
         ! Run with verbose flag and custom cache directory
         command = 'fpm run fortran -- -v --cache-dir "'//trim(cache_dir)// &
-                  '" '//trim(filename)//' > /tmp/test_cache_output.tmp 2>&1'
+                  '" '//trim(filename)//' > "'//trim(temp_output_file)//'" 2>&1'
         call execute_command_line(trim(command), exitstat=exit_code)
 
         ! Read full output including verbose messages
         output = ''
-     open (newunit=unit, file='/tmp/test_cache_output.tmp', status='old', iostat=iostat)
+        open (newunit=unit, file=trim(temp_output_file), status='old', iostat=iostat)
         if (iostat == 0) then
             do
                 read (unit, '(a)', iostat=iostat) line
@@ -459,7 +479,7 @@ contains
         end if
 
         ! Clean up
-        call execute_command_line('rm -f /tmp/test_cache_output.tmp')
+        call execute_command_line('rm -f "'//trim(temp_output_file)//'"')
 
     end subroutine run_example_with_cache
 
@@ -495,8 +515,8 @@ contains
         call replace_spaces_with_underscores(timestamp)
 
         ! Create temporary directories and files
-        temp_cache_dir = '/tmp/fortran_test_cache_'//trim(timestamp)
-        temp_source_dir = '/tmp/fortran_test_source_'//trim(timestamp)
+        temp_cache_dir = create_temp_dir('fortran_test_cache')
+        temp_source_dir = create_temp_dir('fortran_test_source')
         temp_source_file = trim(temp_source_dir)//'/main.f90'
 
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
@@ -619,8 +639,7 @@ contains
 
 999     continue
         ! Clean up temporary files and cache directory
-        cleanup_command = 'rm -rf "'//trim(temp_cache_dir)//'"'
-        call execute_command_line(trim(cleanup_command))
+        call cleanup_temp_dir(temp_cache_dir)
         cleanup_command = 'rm -rf "'//trim(temp_source_dir)//'"'
         call execute_command_line(trim(cleanup_command))
         print '(a)', 'Cleaned up temporary files and cache directory'
@@ -659,15 +678,13 @@ contains
         call replace_spaces_with_underscores(timestamp)
 
         ! Create temporary directories
-        temp_cache_dir = '/tmp/fortran_complex_dep_cache_'//trim(timestamp)
-        temp_source_dir = '/tmp/fortran_complex_dep_source_'//trim(timestamp)
+        temp_cache_dir = create_temp_dir('fortran_complex_dep_cache')
+        temp_source_dir = create_temp_dir('fortran_complex_dep_source')
 
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
         print '(a,a)', 'Using temporary source: ', trim(temp_source_dir)
 
-        ! Create test source directory
-        command = 'mkdir -p "'//trim(temp_source_dir)//'"'
-        call execute_command_line(trim(command))
+        ! Directory already created by create_temp_dir
 
         ! Create initial version of files
         call create_initial_dependency_files(temp_source_dir)
@@ -745,8 +762,8 @@ contains
 
 999     continue
         ! Clean up
-        command = 'rm -rf "'//trim(temp_cache_dir)//'" "'//trim(temp_source_dir)//'"'
-        call execute_command_line(trim(command))
+        call cleanup_temp_dir(temp_cache_dir)
+        call cleanup_temp_dir(temp_source_dir)
         print '(a)', 'Cleaned up temporary directories'
         print *
 
@@ -851,7 +868,7 @@ contains
         ! Create a clean timestamp
         timestamp = get_test_timestamp()
         call replace_spaces_with_underscores(timestamp)
-        temp_cache_dir = '/tmp/fortran_preproc_test_'//trim(timestamp)
+        temp_cache_dir = create_temp_dir('fortran_preproc_test')
 
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
 
@@ -869,8 +886,7 @@ contains
                             temp_cache_dir, n_passed, n_failed)
 
         ! Clean up temporary cache directory
-        cleanup_command = 'rm -rf "'//trim(temp_cache_dir)//'"'
-        call execute_command_line(trim(cleanup_command))
+        call cleanup_temp_dir(temp_cache_dir)
         print '(a)', 'Cleaned up temporary cache directory'
         print *
 

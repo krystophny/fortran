@@ -1,0 +1,90 @@
+--- a/src/json_value_module.F90
++++ b/src/json_value_module.F90
+@@ -9401,13 +9401,20 @@ contains
+
+     initialized = .false.
+
++    ! Check for empty array first
++    if (json%is_vector(me)) then
++        if (json%count(me) == 0) then
++            allocate(character(kind=CK,len=0) :: vec(0))
++            allocate(ilen(0))
++            return
++        end if
++    end if
++
+     call json%string_info(me,ilen=ilen,max_str_len=max_len)
+     if (.not. json%exception_thrown) then
+-        ! now get each string using the callback function:
+-        call json%get(me, array_callback=get_chars_from_array)
+-    end if
+-
+-    if (json%exception_thrown) then
++        ! Alternative implementation without internal procedure callback
++        call json_get_alloc_string_vec_alt(json, me, vec, ilen)
++    else
+         if (allocated(vec))  deallocate(vec)
+         if (allocated(ilen)) deallocate(ilen)
+     end if
+@@ -9444,6 +9451,59 @@ contains
+
+     end subroutine json_get_alloc_string_vec
+ !*****************************************************************************************
++
++!*****************************************************************************************
++!> Alternative implementation without internal procedure callback
++    subroutine json_get_alloc_string_vec_alt(json, me, vec, ilen)
++
++    implicit none
++
++    class(json_core),intent(inout)       :: json
++    type(json_value),pointer,intent(in)  :: me
++    character(kind=CK,len=:),dimension(:),allocatable,intent(out) :: vec
++    integer(IK),dimension(:),allocatable,intent(out),optional :: ilen
++
++    type(json_value),pointer :: element
++    character(kind=CK,len=:),allocatable :: cval
++    integer(IK) :: i, n, max_len
++
++    if (.not. json%is_vector(me)) return
++
++    n = json%count(me)
++    if (n == 0) then
++        allocate(character(kind=CK,len=0) :: vec(0))
++        if (present(ilen)) allocate(ilen(0))
++        return
++    end if
++
++    ! Get max string length
++    max_len = 0
++    do i = 1, n
++        call json%get_child(me, i, element)
++        if (json%is_string(element)) then
++            call json%get(element, cval)
++            if (allocated(cval)) then
++                max_len = max(max_len, len(cval))
++                deallocate(cval)
++            end if
++        end if
++    end do
++
++    ! Allocate output arrays
++    allocate(character(kind=CK,len=max_len) :: vec(n))
++    if (present(ilen)) allocate(ilen(n))
++
++    ! Get all strings
++    do i = 1, n
++        call json%get_child(me, i, element)
++        call json%get(element, cval)
++        if (allocated(cval)) then
++            vec(i) = cval
++            if (present(ilen)) ilen(i) = len(cval)
++            deallocate(cval)
++        else
++            vec(i) = CK_''
++            if (present(ilen)) ilen(i) = 0
++        end if
++    end do
++
++    end subroutine json_get_alloc_string_vec_alt
++!*****************************************************************************************
