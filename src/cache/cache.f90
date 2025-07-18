@@ -18,15 +18,15 @@ module cache
 contains
 
     function get_cache_dir() result(cache_dir)
-        character(len=256) :: cache_dir
-        character(len=256) :: home_dir
+        character(len=:), allocatable :: cache_dir
+        character(len=256) :: temp_dir, home_dir
         integer :: status
 
         ! Try to get XDG_CACHE_HOME first (Linux standard)
-        call get_environment_variable('XDG_CACHE_HOME', cache_dir, status=status)
+        call get_environment_variable('XDG_CACHE_HOME', temp_dir, status=status)
 
-        if (status == 0 .and. len_trim(cache_dir) > 0) then
-            cache_dir = join_path(trim(cache_dir), 'fortran')
+        if (status == 0 .and. len_trim(temp_dir) > 0) then
+            cache_dir = join_path(trim(temp_dir), 'fortran')
         else
             ! Fallback to HOME directory
             call get_environment_variable('HOME', home_dir, status=status)
@@ -36,9 +36,9 @@ contains
                 cache_dir = join_path(trim(home_dir), '.cache', 'fortran')
             else
                 ! Windows fallback: try LOCALAPPDATA
-                call get_environment_variable('LOCALAPPDATA', cache_dir, status=status)
+                call get_environment_variable('LOCALAPPDATA', temp_dir, status=status)
                 if (status == 0) then
-                    cache_dir = join_path(trim(cache_dir), 'fortran', 'cache')
+                    cache_dir = join_path(trim(temp_dir), 'fortran', 'cache')
                 else
                     ! Last resort - use current directory
                     cache_dir = join_path('.', '.fortran-cache')
@@ -63,7 +63,7 @@ contains
     subroutine ensure_cache_structure(cache_dir, success)
         character(len=*), intent(in) :: cache_dir
         logical, intent(out) :: success
-        character(len=512) :: builds_dir, modules_dir, executables_dir, metadata_dir
+ character(len=:), allocatable :: builds_dir, modules_dir, executables_dir, metadata_dir
 
         ! Create main cache directory first
         call ensure_cache_dir(cache_dir, success)
@@ -88,8 +88,8 @@ contains
 
     function get_cache_subdir(subdir_name) result(subdir_path)
         character(len=*), intent(in) :: subdir_name
-        character(len=512) :: subdir_path
-        character(len=256) :: cache_dir
+        character(len=:), allocatable :: subdir_path
+        character(len=:), allocatable :: cache_dir
 
         cache_dir = get_cache_dir()
         subdir_path = join_path(cache_dir, subdir_name)
@@ -100,7 +100,7 @@ contains
         character(len=*), intent(in) :: cache_key
         character(len=*), intent(in) :: module_files(:)
         logical, intent(out) :: success
-        character(len=512) :: modules_dir, dest_file, command
+        character(len=:), allocatable :: modules_dir, dest_file, command
         integer :: i, exitstat
 
         ! Get modules cache directory
@@ -137,7 +137,7 @@ contains
     subroutine store_executable_cache(cache_key, executable_path, success)
         character(len=*), intent(in) :: cache_key, executable_path
         logical, intent(out) :: success
-        character(len=512) :: executables_dir, dest_file, command
+        character(len=:), allocatable :: executables_dir, dest_file, command
         integer :: exitstat
 
         ! Get executables cache directory
@@ -267,7 +267,7 @@ contains
         !> Store compiled modules and executables in cache
         character(len=*), intent(in) :: hash_key, build_dir
         logical, intent(out) :: success
-        character(len=512) :: cache_path, command
+        character(len=:), allocatable :: cache_path, command
         integer :: exitstat
 
         ! Create cache directory for this hash
@@ -291,7 +291,7 @@ contains
         !> Retrieve cached build artifacts
         character(len=*), intent(in) :: hash_key, target_dir
         logical, intent(out) :: success
-        character(len=512) :: cache_path, command
+        character(len=:), allocatable :: cache_path, command
         integer :: exitstat
 
         ! Check if cache exists
@@ -321,7 +321,7 @@ command = 'xcopy /E /I /Y "'//trim(cache_path)//'\*" "'//trim(target_dir)//'" >n
         !> Check if cache entry exists
         character(len=*), intent(in) :: hash_key
         logical :: cache_found
-        character(len=512) :: cache_path
+        character(len=:), allocatable :: cache_path
 
         cache_path = join_path(get_cache_subdir('builds'), hash_key)
         cache_found = exists(cache_path)
@@ -332,7 +332,7 @@ command = 'xcopy /E /I /Y "'//trim(cache_path)//'\*" "'//trim(target_dir)//'" >n
         !> Remove cache entry
         character(len=*), intent(in) :: hash_key
         logical, intent(out) :: success
-        character(len=512) :: cache_path, command
+        character(len=:), allocatable :: cache_path, command
         integer :: exitstat
 
         cache_path = join_path(get_cache_subdir('builds'), hash_key)
@@ -399,7 +399,7 @@ command = 'xcopy /E /I /Y "'//trim(cache_path)//'\*" "'//trim(target_dir)//'" >n
         character(len=*), intent(in) :: custom_cache_dir
         logical, intent(out) :: success
         character(len=256) :: cache_dir
-        character(len=512) :: command
+        character(len=:), allocatable :: command
         integer :: exitstat, cmdstat
 
         success = .false.
@@ -439,7 +439,7 @@ command = 'xcopy /E /I /Y "'//trim(cache_path)//'\*" "'//trim(target_dir)//'" >n
         character(len=*), intent(in) :: custom_cache_dir
         character(len=*), intent(out) :: info
         character(len=256) :: cache_dir
-        character(len=512) :: command, size_output
+        character(len=:), allocatable :: command, size_output
         integer :: unit, ios, exitstat, cmdstat
         integer :: num_files, num_dirs
         logical :: exists
