@@ -15,29 +15,43 @@
 - **Comprehensive Test Suite (30+ frontend tests)**
 - **Notebook Support with Figure/Plot Integration**
 
-## Current Phase: AST Frontend Production-Ready ✅
+## Current Phase: Full Type Inference Implementation 🚧
 
-### **Phase 8 Complete: Production AST System**
+### **Phase 8 Complete: Production AST System** ✅
 
-The AST-based frontend is now **complete and production-ready** with sophisticated capabilities:
+The AST-based frontend architecture is **complete and production-ready**:
 
-#### **Complete 4-Phase Compiler Architecture**
-- ✅ **Lexer**: Full tokenization with JSON serialization (24 keywords, 8 token types)
-- ✅ **Parser**: Comprehensive parsing (expressions, statements, functions, control flow)
-- ✅ **Semantic Analysis**: Hindley-Milner type inference with Algorithm W
-- ✅ **Code Generation**: Standard Fortran 90 output with modern defaults
+### **Phase 9 In Progress: Full Fortran 95 Type Inference**
 
-#### **Advanced Type System**
-- ✅ **Hindley-Milner Type Inference**: Complete with unification and generalization
-- ✅ **Polymorphic Support**: Wrapper pattern for gfortran 15 compatibility
-- ✅ **Type Safety**: Occurs check, substitution system, type schemes
-- ✅ **Multiple Arguments**: Function calls and print statements
+Currently implementing complete type inference for all Fortran 95 features:
 
-#### **Robust Architecture**
-- ✅ **AST Pipeline**: Proper AST-based processing (no shortcuts)
-- ✅ **JSON Workflow**: Debug output for all phases
-- ✅ **Test Coverage**: 30+ test files covering all components
-- ✅ **Memory Management**: Safe polymorphic arrays with wrapper pattern
+#### **Existing Infrastructure** ✅
+- ✅ **4-Phase Architecture**: Lexer → Parser → Semantic → Codegen
+- ✅ **JSON Pipeline**: All phases support JSON input/output
+- ✅ **Basic Type Inference**: Simple assignments and expressions
+- ✅ **Test Framework**: 30+ tests with wildcard discovery
+- ✅ **Debug Flags**: --debug-tokens, --debug-ast, --debug-semantic, --debug-codegen
+- ✅ **Pipeline Flags**: --from-tokens, --from-ast, --from-semantic
+
+#### **Key Architectural Decisions** 📐
+
+1. **Unified AST Structure**: The semantic analyzer augments the existing AST with type information rather than creating a new structure. This allows the code generator to work with both:
+   - **Typed AST**: From semantic analysis (lowercase fortran with inferred types)
+   - **Untyped AST**: From parser (standard Fortran with explicit types)
+
+2. **Unified JSON Serialization**: Both parser and semantic analyzer use the same json_writer/json_reader modules:
+   - All AST nodes implement `to_json` method
+   - json_reader can deserialize any AST structure
+   - Single `--from-ast` flag works for both semantic analyzer and code generator inputs
+
+This architecture eliminates duplication and ensures consistency across the pipeline.
+
+#### **Phase 9 Goals** 🚧
+- [ ] **Complete Fortran 95 Coverage**: All language features
+- [ ] **Full Type Inference**: Arrays, derived types, procedures
+- [ ] **Double Standardization**: Output is idempotent
+- [ ] **Comprehensive Tests**: Every Fortran 95 construct
+- [ ] **Remove Legacy Code**: Clean up temporary fallbacks
 
 ## Modern Fortran Ecosystem Integration 🌐
 
@@ -92,7 +106,7 @@ The AST-based frontend is now **complete and production-ready** with sophisticat
 
 ### Next Priority: Registry Integration & Language Evolution
 1. **Official FPM Registry Integration**: Complete module database system
-2. **Enhanced Language Features**: Advanced lazy fortran syntax extensions
+2. **Enhanced Language Features**: Advanced lowercase fortran syntax extensions
 3. **Performance Optimization**: Faster compilation and execution
 4. **Extended Type System**: More sophisticated inference patterns
 
@@ -115,7 +129,7 @@ The AST-based frontend is now **complete and production-ready** with sophisticat
 ### Short-term (AST Implementation) - **COMPLETE** ✅
 - ✅ Working lexer with comprehensive tokenization
 - ✅ Complete AST node definitions with visitor pattern
-- ✅ Full parser for Simple Fortran (expressions, statements, functions)
+- ✅ Full parser for Lowercase Fortran (expressions, statements, functions)
 - ✅ Code generator producing valid Fortran 90 with modern defaults
 - ✅ All regression tests passing (30+ test files)
 - ✅ Advanced type inference with Hindley-Milner system
@@ -136,7 +150,7 @@ The AST-based frontend is now **complete and production-ready** with sophisticat
 
 - **✅ Complete**: Production AST frontend with Hindley-Milner type inference
 - **🎯 Current**: FPM Registry integration & Module database system
-- **Following**: Advanced lazy fortran syntax & Fortran 2003 support
+- **Following**: Advanced lowercase fortran syntax & Fortran 2003 support
 - **Later**: LLVM IR generation & Compiler integration
 - **Future**: Multiple dispatch & Advanced language features
 

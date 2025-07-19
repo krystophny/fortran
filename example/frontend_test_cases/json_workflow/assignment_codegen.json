@@ -1,0 +1,11 @@
+{
+  "input_file": "/home/ert/code/fortran/example/frontend_test_cases/json_workflow/assignment.f",
+  "generated_code": [
+    "program main",
+    "    implicit none",
+    "    integer :: x",
+    "",
+    "    x = 42",
+    "end program main"
+  ]
+}

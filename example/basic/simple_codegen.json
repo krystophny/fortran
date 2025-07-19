@@ -1,0 +1,8 @@
+{
+  "input_file": "/afs/itp.tugraz.at/proj/plasma/CODE/ert/fortran/example/basic/simple.f",
+  "generated_code": [
+    "program main",
+    "    implicit none",
+    "end program main"
+  ]
+}

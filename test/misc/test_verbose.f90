@@ -1,5 +1,6 @@
 program test_verbose
     use, intrinsic :: iso_fortran_env, only: error_unit
+    use temp_utils, only: create_temp_dir, get_temp_file_path
     implicit none
 
     integer :: exit_code
@@ -86,6 +87,7 @@ contains
 
         character(len=512) :: command
         character(len=256) :: temp_cache
+        character(len=:), allocatable :: temp_dir, temp_output_file
         integer :: unit, iostat
         character(len=1024) :: line
 
@@ -93,17 +95,21 @@ contains
         temp_cache = './test_verbose_cache'
         call execute_command_line('rm -rf '//trim(temp_cache))
 
+        ! Create temp directory and file path
+        temp_dir = create_temp_dir('fortran_test')
+        temp_output_file = get_temp_file_path(temp_dir, 'test_output.tmp')
+
         ! Build command with custom cache
         command = 'fpm run fortran -- --cache-dir '//trim(temp_cache)// &
                   ' '//trim(flags)//' '// &
-                  trim(filename)//' > /tmp/test_output.tmp 2>&1'
+                  trim(filename)//' > '//temp_output_file//' 2>&1'
 
         ! Run command
         call execute_command_line(trim(command), exitstat=exit_code)
 
         ! Read output
         output = ''
-        open (newunit=unit, file='/tmp/test_output.tmp', status='old', iostat=iostat)
+        open (newunit=unit, file=temp_output_file, status='old', iostat=iostat)
         if (iostat == 0) then
             do
                 read (unit, '(a)', iostat=iostat) line
@@ -114,7 +120,7 @@ contains
         end if
 
         ! Clean up
-        call execute_command_line('rm -f /tmp/test_output.tmp')
+        call execute_command_line('rm -f '//temp_output_file)
         call execute_command_line('rm -rf '//trim(temp_cache))
 
     end subroutine run_fortran

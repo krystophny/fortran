@@ -1,6 +1,7 @@
 program test_examples
     use, intrinsic :: iso_fortran_env, only: error_unit
     use cache, only: get_cache_dir
+    use temp_utils, only: create_temp_dir, cleanup_temp_dir, get_temp_file_path
     implicit none
 
     character(len=256), dimension(:), allocatable :: example_files
@@ -17,66 +18,66 @@ program test_examples
     allocate (example_files(n_examples))
 
     ! Hello examples (.f90 and .f versions)
-    example_files(1) = 'example/hello/hello.f90'
-    example_files(2) = 'example/hello/hello.f'
+    example_files(1) = 'example/basic/hello/hello.f90'
+    example_files(2) = 'example/basic/hello/hello.f'
 
     ! Calculator examples (.f90 and .f versions)
-    example_files(3) = 'example/calculator/calculator.f90'
-    example_files(4) = 'example/calculator/calculator.f'
+    example_files(3) = 'example/basic/calculator/calculator.f90'
+    example_files(4) = 'example/basic/calculator/calculator.f'
 
     ! Precision examples (.f90 and .f versions)
-    example_files(5) = 'example/precision/precision_test.f90'
-    example_files(6) = 'example/precision/precision_test.f'
-    example_files(7) = 'example/precision/precision_compare.f90'
-    example_files(8) = 'example/precision/precision_compare.f'
-    example_files(9) = 'example/precision/real_default_test.f90'
-    example_files(10) = 'example/precision/real_default_test.f'
+    example_files(5) = 'example/scientific/precision/precision_test.f90'
+    example_files(6) = 'example/scientific/precision/precision_test.f'
+    example_files(7) = 'example/scientific/precision/precision_compare.f90'
+    example_files(8) = 'example/scientific/precision/precision_compare.f'
+    example_files(9) = 'example/scientific/precision/real_default_test.f90'
+    example_files(10) = 'example/scientific/precision/real_default_test.f'
 
     ! Interdependent examples (.f90 and .f versions)
-    example_files(11) = 'example/interdependent/main.f90'
-    example_files(12) = 'example/interdependent/main.f'
+    example_files(11) = 'example/modules/interdependent/main.f90'
+    example_files(12) = 'example/modules/interdependent/main.f'
 
     ! Type inference examples
-    example_files(13) = 'example/type_inference/calculate.f90'
-    example_files(14) = 'example/type_inference/calculate.f'
-    example_files(15) = 'example/type_inference/all_types.f90'
-    example_files(16) = 'example/type_inference/all_types.f'
+    example_files(13) = 'example/fortran/type_inference/calculate.f90'
+    example_files(14) = 'example/fortran/type_inference/calculate.f'
+    example_files(15) = 'example/fortran/type_inference/all_types.f90'
+    example_files(16) = 'example/fortran/type_inference/all_types.f'
 
     ! Advanced inference examples
-    example_files(17) = 'example/advanced_inference/arrays.f90'
-    example_files(18) = 'example/advanced_inference/arrays.f'
-    example_files(19) = 'example/advanced_inference/derived_types.f90'
-    example_files(20) = 'example/advanced_inference/derived_types.f'
+    example_files(17) = 'example/fortran/advanced_inference/arrays.f90'
+    example_files(18) = 'example/fortran/advanced_inference/arrays.f'
+    example_files(19) = 'example/fortran/advanced_inference/derived_types.f90'
+    example_files(20) = 'example/fortran/advanced_inference/derived_types.f'
 
     ! Notebook examples
-    example_files(21) = 'example/notebook/simple_math.f90'
-    example_files(22) = 'example/notebook/simple_math.f'
-    example_files(23) = 'example/notebook/arrays_loops.f90'
-    example_files(24) = 'example/notebook/arrays_loops_simple.f'
-    example_files(25) = 'example/notebook/control_flow.f90'
-    example_files(26) = 'example/notebook/control_flow_simple.f'
+    example_files(21) = 'example/scientific/notebook/simple_math.f90'
+    example_files(22) = 'example/scientific/notebook/simple_math.f'
+    example_files(23) = 'example/scientific/notebook/arrays_loops.f90'
+    example_files(24) = 'example/scientific/notebook/arrays_loops_simple.f'
+    example_files(25) = 'example/scientific/notebook/control_flow.f90'
+    example_files(26) = 'example/scientific/notebook/control_flow_simple.f'
 
     ! Step 1 explicit types examples (our new Step 1 work)
-    example_files(27) = 'example/step1_explicit_types/step1_demo.f90'
-    example_files(28) = 'example/step1_explicit_types/step1_demo.f'
+    example_files(27) = 'example/fortran/step1_explicit_types/step1_demo.f90'
+    example_files(28) = 'example/fortran/step1_explicit_types/step1_demo.f'
 
     ! Advanced inference function returns and intrinsics
-    example_files(29) = 'example/advanced_inference/function_returns.f90'
-    example_files(30) = 'example/advanced_inference/function_returns.f'
-    example_files(31) = 'example/advanced_inference/intrinsic_functions.f90'
-    example_files(32) = 'example/advanced_inference/intrinsic_functions.f'
+    example_files(29) = 'example/fortran/advanced_inference/function_returns.f90'
+    example_files(30) = 'example/fortran/advanced_inference/function_returns.f'
+    example_files(31) = 'example/fortran/advanced_inference/intrinsic_functions.f90'
+    example_files(32) = 'example/fortran/advanced_inference/intrinsic_functions.f'
 
     ! Plotting examples (may have external deps but should be testable)
-    example_files(33) = 'example/plotting/plot_demo.f90'
+    example_files(33) = 'example/scientific/plotting/plot_demo.f90'
 
     ! List of expected failures - .f files with known preprocessor issues
     ! These require advanced type inference and complex syntax support
     n_expected_failures = 4
     allocate (expected_failures(n_expected_failures))
-    expected_failures(1) = 'example/advanced_inference/arrays.f'              ! Complex array type inference
-    expected_failures(2) = 'example/advanced_inference/derived_types.f'       ! Derived type syntax
-    expected_failures(3) = 'example/notebook/arrays_loops_simple.f'           ! Complex array functions
-    expected_failures(4) = 'example/advanced_inference/function_returns.f'    ! Function interfaces
+    expected_failures(1) = 'example/fortran/advanced_inference/arrays.f'              ! Complex array type inference
+    expected_failures(2) = 'example/fortran/advanced_inference/derived_types.f'       ! Derived type syntax
+    expected_failures(3) = 'example/scientific/notebook/arrays_loops_simple.f'           ! Complex array functions
+    expected_failures(4) = 'example/fortran/advanced_inference/function_returns.f'    ! Function interfaces
 
     n_passed = 0
     n_failed = 0
@@ -115,33 +116,33 @@ program test_examples
 
             ! Show output for specific examples
             select case (trim(example_files(i)))
-            case ('example/hello/hello.f90', 'example/hello/hello.f')
+            case ('example/basic/hello/hello.f90', 'example/basic/hello/hello.f')
                 if (index(output, 'Hello from fortran CLI!') == 0) then
                     print '(a)', '    WARNING: Expected output not found'
                 end if
 
-           case ('example/calculator/calculator.f90', 'example/calculator/calculator.f')
+           case ('example/basic/calculator/calculator.f90', 'example/basic/calculator/calculator.f')
              if (index(output, 'Sum of') > 0 .and. index(output, 'Product of') > 0) then
                     print '(a)', '    ✓ Calculator output correct'
                 else
                     print '(a)', '    WARNING: Calculator output incomplete'
                 end if
 
-            case ('example/precision/real_default_test.f90')
+            case ('example/scientific/precision/real_default_test.f90')
               if (index(output, 'sizeof(real) =                     4  bytes') > 0) then
                     print '(a)', '    ✓ Standard single precision confirmed (.f90)'
                 else
                   print '(a)', '    WARNING: Standard precision not working as expected'
                 end if
 
-            case ('example/precision/real_default_test.f')
+            case ('example/scientific/precision/real_default_test.f')
               if (index(output, 'sizeof(real) =                     8  bytes') > 0) then
                     print '(a)', '    ✓ Opinionated double precision confirmed (.f)'
                 else
                print '(a)', '    WARNING: Opinionated precision not working as expected'
                 end if
 
-            case ('example/interdependent/main.f90', 'example/interdependent/main.f')
+            case ('example/modules/interdependent/main.f90', 'example/modules/interdependent/main.f')
                 if (index(output, 'Cylinder Calculations') > 0) then
                     print '(a)', '    ✓ Interdependent modules working correctly'
                 else
@@ -291,39 +292,56 @@ contains
         block
             character(len=256) :: cache_dir
             cache_dir = get_cache_dir()
+#ifdef _WIN32
+            command = 'del /q "'//trim(cache_dir)//'\'//trim(cache_pattern)//'_*" 2>nul'
+#else
             command = 'rm -rf "'//trim(cache_dir)//'/'//trim(cache_pattern)//'_*"'
+#endif
             call execute_command_line(trim(command))
         end block
 
         ! Run the example
-        command = 'fpm run fortran -- '//trim(filename)// &
-                  ' > /tmp/test_output.tmp 2>&1'
-        call execute_command_line(trim(command), exitstat=exit_code)
+        block
+            character(len=:), allocatable :: temp_output_file
+            temp_output_file = get_temp_file_path(create_temp_dir('fortran_test'), 'test_output.tmp')
+#ifdef _WIN32
+            command = 'fpm run fortran -- '//trim(filename)// &
+                      ' > "'//temp_output_file//'" 2>&1'
+#else
+            command = 'fpm run fortran -- '//trim(filename)// &
+                      ' > "'//temp_output_file//'" 2>&1'
+#endif
+            call execute_command_line(trim(command), exitstat=exit_code)
 
-        ! Read output
-        output = ''
-        open (newunit=unit, file='/tmp/test_output.tmp', status='old', iostat=iostat)
-        if (iostat == 0) then
-            do
-                read (unit, '(a)', iostat=iostat) line
-                if (iostat /= 0) exit
-                if (len_trim(output) > 0) then
-                    output = trim(output)//' | '//trim(adjustl(line))
-                else
-                    output = trim(adjustl(line))
-                end if
-            end do
-            close (unit)
-        end if
+            ! Read output
+            output = ''
+            open (newunit=unit, file=temp_output_file, status='old', iostat=iostat)
+            if (iostat == 0) then
+                do
+                    read (unit, '(a)', iostat=iostat) line
+                    if (iostat /= 0) exit
+                    if (len_trim(output) > 0) then
+                        output = trim(output)//' | '//trim(adjustl(line))
+                    else
+                        output = trim(adjustl(line))
+                    end if
+                end do
+                close (unit)
+            end if
 
-        ! Extract just the program output (after FPM messages)
-        j = index(output, '[100%] Project compiled successfully.')
-        if (j > 0) then
-            output = output(j + 37:)  ! Skip the FPM message
-        end if
+            ! Extract just the program output (after FPM messages)
+            j = index(output, '[100%] Project compiled successfully.')
+            if (j > 0) then
+                output = output(j + 37:)  ! Skip the FPM message
+            end if
 
-        ! Clean up
-        call execute_command_line('rm -f /tmp/test_output.tmp')
+            ! Clean up temp file
+#ifdef _WIN32
+            call execute_command_line('del /q "'//temp_output_file//'" 2>nul')
+#else
+            call execute_command_line('rm -f "'//temp_output_file//'"')
+#endif
+        end block
 
     end subroutine run_example
 
@@ -331,7 +349,7 @@ contains
         integer, intent(inout) :: n_passed, n_failed
         character(len=1024) :: output1, output2
         integer :: exit_code1, exit_code2
-        character(len=*), parameter :: test_file = 'example/hello/hello.f90'
+        character(len=*), parameter :: test_file = 'example/basic/hello/hello.f90'
         character(len=256) :: temp_cache_dir
         character(len=512) :: cleanup_command
 
@@ -341,7 +359,7 @@ contains
         print *
 
         ! Create temporary cache directory
-        temp_cache_dir = '/tmp/fortran_test_cache_'//get_test_timestamp()
+        temp_cache_dir = create_temp_dir('fortran_test_cache')
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
 
         ! First run - should compile
@@ -421,8 +439,7 @@ contains
 
 999     continue
         ! Clean up temporary cache directory
-        cleanup_command = 'rm -rf "'//trim(temp_cache_dir)//'"'
-        call execute_command_line(trim(cleanup_command))
+        call cleanup_temp_dir(temp_cache_dir)
         print '(a)', 'Cleaned up temporary cache directory'
         print *
 
@@ -433,18 +450,21 @@ contains
         character(len=*), intent(out) :: output
         integer, intent(out) :: exit_code
 
-        character(len=512) :: command
+        character(len=512) :: command, temp_output_file
         integer :: unit, iostat
         character(len=1024) :: line
 
+        ! Create temp output file path
+        temp_output_file = get_temp_file_path(create_temp_dir('fortran_test'), 'test_cache_output.tmp')
+
         ! Run with verbose flag and custom cache directory
         command = 'fpm run fortran -- -v --cache-dir "'//trim(cache_dir)// &
-                  '" '//trim(filename)//' > /tmp/test_cache_output.tmp 2>&1'
+                  '" '//trim(filename)//' > "'//trim(temp_output_file)//'" 2>&1'
         call execute_command_line(trim(command), exitstat=exit_code)
 
         ! Read full output including verbose messages
         output = ''
-     open (newunit=unit, file='/tmp/test_cache_output.tmp', status='old', iostat=iostat)
+        open (newunit=unit, file=trim(temp_output_file), status='old', iostat=iostat)
         if (iostat == 0) then
             do
                 read (unit, '(a)', iostat=iostat) line
@@ -459,7 +479,7 @@ contains
         end if
 
         ! Clean up
-        call execute_command_line('rm -f /tmp/test_cache_output.tmp')
+        call execute_command_line('rm -f "'//trim(temp_output_file)//'"')
 
     end subroutine run_example_with_cache
 
@@ -495,8 +515,8 @@ contains
         call replace_spaces_with_underscores(timestamp)
 
         ! Create temporary directories and files
-        temp_cache_dir = '/tmp/fortran_test_cache_'//trim(timestamp)
-        temp_source_dir = '/tmp/fortran_test_source_'//trim(timestamp)
+        temp_cache_dir = create_temp_dir('fortran_test_cache')
+        temp_source_dir = create_temp_dir('fortran_test_source')
         temp_source_file = trim(temp_source_dir)//'/main.f90'
 
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
@@ -507,7 +527,7 @@ contains
         call execute_command_line(trim(copy_command))
 
         ! Copy the entire interdependent directory to temp location
-        copy_command = 'cp -r example/interdependent/* "'//trim(temp_source_dir)//'/"'
+  copy_command = 'cp -r example/modules/interdependent/* "'//trim(temp_source_dir)//'/"'
         call execute_command_line(trim(copy_command))
 
         ! First run - should compile everything
@@ -619,8 +639,7 @@ contains
 
 999     continue
         ! Clean up temporary files and cache directory
-        cleanup_command = 'rm -rf "'//trim(temp_cache_dir)//'"'
-        call execute_command_line(trim(cleanup_command))
+        call cleanup_temp_dir(temp_cache_dir)
         cleanup_command = 'rm -rf "'//trim(temp_source_dir)//'"'
         call execute_command_line(trim(cleanup_command))
         print '(a)', 'Cleaned up temporary files and cache directory'
@@ -659,15 +678,13 @@ contains
         call replace_spaces_with_underscores(timestamp)
 
         ! Create temporary directories
-        temp_cache_dir = '/tmp/fortran_complex_dep_cache_'//trim(timestamp)
-        temp_source_dir = '/tmp/fortran_complex_dep_source_'//trim(timestamp)
+        temp_cache_dir = create_temp_dir('fortran_complex_dep_cache')
+        temp_source_dir = create_temp_dir('fortran_complex_dep_source')
 
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
         print '(a,a)', 'Using temporary source: ', trim(temp_source_dir)
 
-        ! Create test source directory
-        command = 'mkdir -p "'//trim(temp_source_dir)//'"'
-        call execute_command_line(trim(command))
+        ! Directory already created by create_temp_dir
 
         ! Create initial version of files
         call create_initial_dependency_files(temp_source_dir)
@@ -745,8 +762,8 @@ contains
 
 999     continue
         ! Clean up
-        command = 'rm -rf "'//trim(temp_cache_dir)//'" "'//trim(temp_source_dir)//'"'
-        call execute_command_line(trim(command))
+        call cleanup_temp_dir(temp_cache_dir)
+        call cleanup_temp_dir(temp_source_dir)
         print '(a)', 'Cleaned up temporary directories'
         print *
 
@@ -851,26 +868,25 @@ contains
         ! Create a clean timestamp
         timestamp = get_test_timestamp()
         call replace_spaces_with_underscores(timestamp)
-        temp_cache_dir = '/tmp/fortran_preproc_test_'//trim(timestamp)
+        temp_cache_dir = create_temp_dir('fortran_preproc_test')
 
         print '(a,a)', 'Using temporary cache: ', trim(temp_cache_dir)
 
         ! Test pairs of .f and .f90 files that should produce identical output
-        call test_file_pair('example/hello/hello.f', 'example/hello/hello.f90', &
+   call test_file_pair('example/basic/hello/hello.f', 'example/basic/hello/hello.f90', &
                             temp_cache_dir, n_passed, n_failed)
 
-    call test_file_pair('example/calculator/calculator.f', 'example/calculator/calculator.f90', &
+    call test_file_pair('example/basic/calculator/calculator.f', 'example/basic/calculator/calculator.f90', &
                             temp_cache_dir, n_passed, n_failed)
 
-    call test_file_pair('example/type_inference/calculate.f', 'example/type_inference/calculate.f90', &
+    call test_file_pair('example/fortran/type_inference/calculate.f', 'example/fortran/type_inference/calculate.f90', &
                             temp_cache_dir, n_passed, n_failed)
 
-    call test_file_pair('example/type_inference/all_types.f', 'example/type_inference/all_types.f90', &
+    call test_file_pair('example/fortran/type_inference/all_types.f', 'example/fortran/type_inference/all_types.f90', &
                             temp_cache_dir, n_passed, n_failed)
 
         ! Clean up temporary cache directory
-        cleanup_command = 'rm -rf "'//trim(temp_cache_dir)//'"'
-        call execute_command_line(trim(cleanup_command))
+        call cleanup_temp_dir(temp_cache_dir)
         print '(a)', 'Cleaned up temporary cache directory'
         print *
 
@@ -987,10 +1003,10 @@ else if (index(clean1, 'Integer count:') > 0 .and. index(clean1, 'Real pi:') > 0
         character(len=*), intent(in) :: filename
         logical :: is_expected
         character(len=256), parameter :: expected_f_failures(4) = [ &
-                                         'example/hello/hello.f                 ', &
-                                         'example/calculator/calculator.f       ', &
-                                         'example/type_inference/calculate.f    ', &
-                                         'example/type_inference/all_types.f    ']
+                     'example/basic/hello/hello.f                                   ', &
+                     'example/basic/calculator/calculator.f                         ', &
+                     'example/fortran/type_inference/calculate.f                    ', &
+                       'example/fortran/type_inference/all_types.f                    ']
         integer :: i
 
         is_expected = .false.

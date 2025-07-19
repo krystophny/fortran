@@ -1,0 +1,41 @@
+# Codecov configuration for fortran project
+coverage:
+  status:
+    project:
+      default:
+        target: 85%
+        threshold: 2%
+        if_ci_failed: error
+    patch:
+      default:
+        target: 90%
+        threshold: 5%
+        if_ci_failed: error
+
+  ignore:
+    - "build/**/*"
+    - "example/**/*"
+    - "draft/**/*"
+    - "**/*test*.f90"  # Test files themselves
+    - "**/test_*"      # Test directories
+    - "**/*.md"        # Documentation
+    - "install.sh"     # Installation scripts
+
+# Comment settings
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes
+
+# Flag management for different test types
+flags:
+  unittests:
+    paths:
+      - src/
+    carryforward: false
+  integration:
+    paths:
+      - test/
+    carryforward: false

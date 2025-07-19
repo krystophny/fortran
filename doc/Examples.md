@@ -3,12 +3,18 @@ title: Examples
 
 # Examples
 
-Practical examples demonstrating `fortran` tool features. All examples are in the [example/](https://github.com/krystophny/fortran/tree/main/example) directory and can be run directly.
+Practical examples demonstrating `fortran` tool features. All examples are organized in the [example/](https://github.com/krystophny/fortran/tree/main/example) directory by category:
+
+- **basic/** - Simple getting started examples
+- **scientific/** - Scientific computing and visualization
+- **modules/** - Module usage and dependencies
+- **fortran/** - Lazy fortran dialect features
+- **frontend_test_cases/** - Frontend compiler test cases (for development)
 
 ## Basic Usage
 
 ### Hello World
-**Location:** [example/hello/](https://github.com/krystophny/fortran/tree/main/example/hello)
+**Location:** [example/basic/hello/](https://github.com/krystophny/fortran/tree/main/example/basic/hello)
 
 ```bash
 # Create and run
@@ -19,7 +25,7 @@ fortran hello.f90
 Simple program execution - the most basic use case.
 
 ### Calculator with Local Modules
-**Location:** [example/calculator/](https://github.com/krystophny/fortran/tree/main/example/calculator)
+**Location:** [example/basic/calculator/](https://github.com/krystophny/fortran/tree/main/example/basic/calculator)
 
 ```fortran
 ! math_module.f90
@@ -52,7 +58,7 @@ Demonstrates automatic local module detection and compilation.
 ## Advanced Features
 
 ### Interdependent Modules
-**Location:** [example/interdependent/](https://github.com/krystophny/fortran/tree/main/example/interdependent)
+**Location:** [example/modules/interdependent/](https://github.com/krystophny/fortran/tree/main/example/modules/interdependent)
 
 Complex module relationships where modules depend on each other:
 
@@ -83,7 +89,7 @@ fortran main.f90  # Resolves all interdependencies automatically
 Shows how the tool handles complex dependency graphs.
 
 ### Type Inference (.f files)
-**Location:** [example/type_inference/](https://github.com/krystophny/fortran/tree/main/example/type_inference)
+**Location:** [example/fortran/type_inference/](https://github.com/krystophny/fortran/tree/main/example/fortran/type_inference)
 
 ```fortran
 ! calculate.f (note: .f extension)
@@ -103,7 +109,7 @@ fortran calculate.f  # Automatically infers types and wraps in program
 Demonstrates the preprocessor that adds type declarations and program structure.
 
 ### Preprocessor Features  
-**Location:** [example/preprocessor/](https://github.com/krystophny/fortran/tree/main/example/preprocessor)
+**Location:** [example/fortran/preprocessor/](https://github.com/krystophny/fortran/tree/main/example/fortran/preprocessor)
 
 ```fortran
 ! math.f
@@ -125,7 +131,7 @@ Shows automatic program wrapping and function handling.
 ## Specialized Use Cases
 
 ### Modern Precision Defaults
-**Location:** [example/precision/](https://github.com/krystophny/fortran/tree/main/example/precision)
+**Location:** [example/scientific/precision/](https://github.com/krystophny/fortran/tree/main/example/scientific/precision)
 
 ```fortran
 ! precision_test.f90
@@ -144,7 +150,7 @@ fortran precision_test.f90
 Demonstrates standard Fortran precision behavior for .f90 files.
 
 ### Notebook-Style Execution
-**Location:** [example/notebook/](https://github.com/krystophny/fortran/tree/main/example/notebook)
+**Location:** [example/scientific/notebook/](https://github.com/krystophny/fortran/tree/main/example/scientific/notebook)
 
 **Simple mathematical computations:**
 ```fortran
@@ -210,7 +216,7 @@ fortran plotting_demo.f
 Demonstrates script-like execution for exploratory programming and notebook-style analysis.
 
 ### External Dependencies
-**Location:** [example/plotting/](https://github.com/krystophny/fortran/tree/main/example/plotting)
+**Location:** [example/scientific/plotting/](https://github.com/krystophny/fortran/tree/main/example/scientific/plotting)
 
 ```fortran
 ! plot_demo.f90
@@ -235,7 +241,7 @@ fortran plot_demo.f90  # Downloads and builds pyplot-fortran automatically
 Shows integration with external FPM packages.
 
 ### Advanced Type Inference
-**Location:** [example/advanced_inference/](https://github.com/krystophny/fortran/tree/main/example/advanced_inference)
+**Location:** [example/fortran/advanced_inference/](https://github.com/krystophny/fortran/tree/main/example/fortran/advanced_inference)
 
 ```fortran
 ! arrays.f
@@ -264,7 +270,7 @@ fortran derived_types.f # Handles derived types
 Advanced preprocessing with complex type inference.
 
 ### Step 1 Type Inference (Explicit Types)
-**Location:** [example/step1_explicit_types/](https://github.com/krystophny/fortran/tree/main/example/step1_explicit_types)
+**Location:** [example/fortran/step1_explicit_types/](https://github.com/krystophny/fortran/tree/main/example/fortran/step1_explicit_types)
 
 ```fortran
 ! step1_demo.f - Input with explicit types
@@ -281,18 +287,18 @@ end function
 ! step1_demo.f90 - Generated output with opinionated defaults
 program main
   implicit none
-  
+
   real(8) :: result  ! ← Forward type propagation
-  
+
   result = square(5.0_8)
   print *, "Square of 5.0 is:", result
 
 contains
 real(8) function square(x)  ! ← Enhanced signature
   implicit none
-  
+
   real(8), intent(in) :: x  ! ← Enhanced parameter
-  
+
   square = x * x
 end function
 end program main

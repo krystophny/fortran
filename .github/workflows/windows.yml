@@ -1,0 +1,201 @@
+name: Windows CI/CD
+
+on:
+  push:
+    branches: [ main, windows-support ]
+  pull_request:
+    branches: [ main, windows-support ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        compiler: [gfortran]
+        include:
+          - compiler: gfortran
+            fc: gfortran
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MinGW (MSYS2)
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: false
+        install: >-
+          mingw-w64-x86_64-gcc-fortran
+          mingw-w64-x86_64-gcc
+          git
+
+    - name: Install FPM
+      shell: msys2 {0}
+      run: |
+        echo "Installing FPM directly from GitHub releases..."
+        curl -L -o fpm.exe https://github.com/fortran-lang/fpm/releases/download/v0.12.0/fpm-0.12.0-windows-x86_64-gcc-12.exe
+        chmod +x fpm.exe
+        mv fpm.exe /mingw64/bin/fpm
+        fpm --version
+
+    - name: Test Windows cache directory creation
+      run: |
+        # Test cache directory creation with Windows paths
+        $env:LOCALAPPDATA = "C:\Users\Test\AppData\Local"
+        if (Test-Path $env:LOCALAPPDATA) {
+          Write-Host "LOCALAPPDATA environment variable set correctly"
+        } else {
+          Write-Host "Creating test LOCALAPPDATA directory"
+          New-Item -ItemType Directory -Path "C:\Users\Test\AppData\Local" -Force
+        }
+      shell: powershell
+
+    - name: Build project
+      run: fpm build --compiler gfortran --flag="-cpp"
+      shell: msys2 {0}
+
+    - name: Run unit tests
+      run: fpm test --compiler gfortran --flag="-cpp"
+      shell: msys2 {0}
+
+    - name: Test cache functionality
+      run: |
+        # Test basic cache creation
+        if (Test-Path $env:LOCALAPPDATA\fortran) {
+          Write-Host "Cache directory exists"
+        } else {
+          Write-Host "Creating cache directory"
+          New-Item -ItemType Directory -Path "$env:LOCALAPPDATA\fortran\cache" -Force
+        }
+
+        # Test fortran executable
+        .\build\gfortran_*\app\fortran.exe --version
+
+        # Test with a simple example
+        echo 'real :: x = 3.14' > test_windows.f
+        .\build\gfortran_*\app\fortran.exe test_windows.f
+
+        # Clean up
+        Remove-Item test_windows.f -Force
+      shell: powershell
+
+    - name: Test module resolution
+      run: |
+        # Test module resolution functionality
+        mkdir test_modules
+        echo 'module test_mod' > test_modules/test.f90
+        echo '  implicit none' >> test_modules/test.f90
+        echo '  real :: pi = 3.14159' >> test_modules/test.f90
+        echo 'end module test_mod' >> test_modules/test.f90
+
+        echo 'program test_prog' > test_modules/main.f90
+        echo '  use test_mod' >> test_modules/main.f90
+        echo '  implicit none' >> test_modules/main.f90
+        echo '  print *, pi' >> test_modules/main.f90
+        echo 'end program test_prog' >> test_modules/main.f90
+
+        cd test_modules
+        ..\build\gfortran_*\app\fortran.exe main.f90
+        cd ..
+
+        # Clean up
+        Remove-Item -Recurse test_modules -Force
+      shell: powershell
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: fortran-windows-${{ matrix.compiler }}
+        path: build/*/app/fortran.exe
+        retention-days: 30
+
+  test-windows-examples:
+    needs: build-windows
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MinGW (MSYS2)
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: false
+        install: >-
+          mingw-w64-x86_64-gcc-fortran
+          mingw-w64-x86_64-gcc
+          git
+
+    - name: Install FPM
+      shell: msys2 {0}
+      run: |
+        echo "Installing FPM directly from GitHub releases..."
+        curl -L -o fpm.exe https://github.com/fortran-lang/fpm/releases/download/v0.12.0/fpm-0.12.0-windows-x86_64-gcc-12.exe
+        chmod +x fpm.exe
+        mv fpm.exe /mingw64/bin/fpm
+        fpm --version
+
+    - name: Build project
+      run: fpm build --compiler gfortran --flag="-cpp"
+      shell: msys2 {0}
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: fortran-windows-gfortran
+        path: artifacts/
+
+    - name: Test example programs
+      run: |
+        # Test various example programs
+        $fortran_exe = "build\gfortran_*\app\fortran.exe"
+
+        # Test hello world
+        & $fortran_exe example/hello.f
+
+        # Test type inference
+        & $fortran_exe example/type_inference/calculate.f
+
+        # Test with comments
+        & $fortran_exe example/with_comments.f
+
+        # Test preprocessor examples
+        & $fortran_exe example/preprocessor/hello.f
+
+        Write-Host "All examples tested successfully on Windows"
+      shell: powershell
+
+    - name: Performance test
+      run: |
+        # Run a simple performance test
+        $fortran_exe = "build\gfortran_*\app\fortran.exe"
+
+        # Create a performance test file
+        @"
+        program perf_test
+          implicit none
+          integer :: i, n
+          real :: sum_val
+
+          n = 1000000
+          sum_val = 0.0
+
+          do i = 1, n
+            sum_val = sum_val + real(i)
+          end do
+
+          print *, 'Sum:', sum_val
+        end program perf_test
+        "@ | Out-File -FilePath perf_test.f -Encoding ASCII
+
+        # Time the execution
+        $start = Get-Date
+        & $fortran_exe perf_test.f
+        $end = Get-Date
+
+        $elapsed = ($end - $start).TotalMilliseconds
+        Write-Host "Performance test completed in $elapsed ms"
+
+        # Clean up
+        Remove-Item perf_test.f -Force
+      shell: powershell

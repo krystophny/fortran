@@ -1,0 +1,251 @@
+program test_type_checking
+    use semantic_analyzer
+    use type_checker
+    use type_system_hm
+    use ast_core
+    implicit none
+
+    integer :: test_count = 0
+    integer :: pass_count = 0
+
+    write (*, '(a)') '=== Testing Type Checking ==='
+    write (*, '(a)') ''
+
+    call test_assignment_compatibility()
+    call test_numeric_promotion()
+    call test_string_assignment()
+    call test_array_conformance()
+    call test_intrinsic_functions()
+    call test_type_errors()
+
+    write (*, '(a)') ''
+    write(*, '(a,i0,a,i0,a)') 'Type checking tests: ', pass_count, '/', test_count, ' passed'
+
+    if (pass_count /= test_count) then
+        error stop 'Some tests failed!'
+    end if
+
+contains
+
+    subroutine test_assignment_compatibility()
+        type(semantic_context_t) :: ctx
+        type(assignment_node) :: assign1, assign2
+        type(identifier_node) :: x_var
+        type(literal_node) :: int_val, real_val
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 1: Assignment compatibility'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! First assignment: x = 42 (integer)
+        x_var = create_identifier("x", 1, 1)
+        int_val = create_literal("42", LITERAL_INTEGER, 1, 5)
+        assign1 = create_assignment(x_var, int_val, 1, 1)
+        typ = ctx%infer_stmt(assign1)
+
+        ! Second assignment: x = 3.14 (real) - should fail type check
+        x_var = create_identifier("x", 2, 1)
+        real_val = create_literal("3.14", LITERAL_REAL, 2, 5)
+        assign2 = create_assignment(x_var, real_val, 2, 1)
+        typ = ctx%infer_stmt(assign2)
+
+        ! x should still have integer type
+        x_var = create_identifier("x", 3, 1)
+        typ = ctx%infer(x_var)
+
+        if (typ%kind == TINT) then
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Assignment compatibility enforced'
+        else
+            write (*, '(a)') '  ✗ FAIL: Type compatibility not enforced'
+        end if
+
+    end subroutine test_assignment_compatibility
+
+    subroutine test_numeric_promotion()
+        type(semantic_context_t) :: ctx
+        type(assignment_node) :: assign
+        type(binary_op_node) :: add_expr
+        type(identifier_node) :: result_var, x_var
+        type(literal_node) :: int_val, real_val
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 2: Numeric type promotion'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Create expression: result = 42 + 3.14
+        int_val = create_literal("42", LITERAL_INTEGER, 1, 10)
+        real_val = create_literal("3.14", LITERAL_REAL, 1, 15)
+        add_expr = create_binary_op(int_val, real_val, "+", 1, 13)
+
+        result_var = create_identifier("result", 1, 1)
+        assign = create_assignment(result_var, add_expr, 1, 1)
+
+        ! Analyze
+        typ = ctx%infer_stmt(assign)
+
+        ! Result should be real due to promotion
+        result_var = create_identifier("result", 2, 1)
+        typ = ctx%infer(result_var)
+
+        if (typ%kind == TREAL) then
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Integer promoted to real in mixed arithmetic'
+        else
+            write (*, '(a)') '  ✗ FAIL: Type promotion failed'
+        end if
+
+    end subroutine test_numeric_promotion
+
+    subroutine test_string_assignment()
+        type(mono_type_t) :: str5, str10
+        logical :: assignable
+
+        write (*, '(a)') 'Test 3: String assignment compatibility'
+        test_count = test_count + 1
+
+        ! Create character types of different lengths
+        str5 = create_mono_type(TCHAR, char_size=5)
+        str10 = create_mono_type(TCHAR, char_size=10)
+
+        ! Check if 5-char string can be assigned to 10-char variable
+        assignable = is_assignable(str5, str10)
+
+        if (assignable) then
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Shorter strings assignable to longer variables'
+        else
+            write (*, '(a)') '  ✗ FAIL: String assignment too restrictive'
+        end if
+
+    end subroutine test_string_assignment
+
+    subroutine test_array_conformance()
+        type(mono_type_t) :: arr1, arr2, arr3, int_elem, real_elem
+        logical :: conformant
+
+        write (*, '(a)') 'Test 4: Array conformance checking'
+        test_count = test_count + 1
+
+        ! Create array types
+        int_elem = create_mono_type(TINT)
+        real_elem = create_mono_type(TREAL)
+
+        ! Array of 10 integers
+        arr1 = create_mono_type(TARRAY, args=[int_elem], char_size=10)
+
+        ! Another array of 10 integers - should be conformant
+        arr2 = create_mono_type(TARRAY, args=[int_elem], char_size=10)
+
+        ! Array of 10 reals - not conformant (different element type)
+        arr3 = create_mono_type(TARRAY, args=[real_elem], char_size=10)
+
+        ! Check conformance
+        conformant = check_array_conformance(arr1, arr2)
+
+        if (conformant) then
+            ! Also check non-conformant case
+            conformant = check_array_conformance(arr1, arr3)
+            if (.not. conformant) then
+                pass_count = pass_count + 1
+                write (*, '(a)') '  ✓ PASS: Array conformance correctly checked'
+            else
+               write (*, '(a)') '  ✗ FAIL: Different element types marked as conformant'
+            end if
+        else
+            write (*, '(a)') '  ✗ FAIL: Same arrays not conformant'
+        end if
+
+    end subroutine test_array_conformance
+
+    subroutine test_intrinsic_functions()
+        type(semantic_context_t) :: ctx
+        type(function_call_node) :: sqrt_call, int_call
+        type(identifier_node) :: result_var
+        type(literal_node) :: real_arg
+        type(assignment_node) :: assign
+        type(ast_node_wrapper) :: arg_wrapper
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 5: Intrinsic function types'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Test 1: sqrt(4.0) should return real
+        real_arg = create_literal("4.0", LITERAL_REAL, 1, 10)
+        allocate (arg_wrapper%node, source=real_arg)
+        sqrt_call = create_function_call("sqrt", [arg_wrapper], 1, 5)
+
+        result_var = create_identifier("r1", 1, 1)
+        assign = create_assignment(result_var, sqrt_call, 1, 1)
+        typ = ctx%infer_stmt(assign)
+
+        result_var = create_identifier("r1", 2, 1)
+        typ = ctx%infer(result_var)
+
+        if (typ%kind == TREAL) then
+            ! Test 2: int(4.5) should return integer
+            real_arg = create_literal("4.5", LITERAL_REAL, 3, 10)
+            deallocate (arg_wrapper%node)
+            allocate (arg_wrapper%node, source=real_arg)
+            int_call = create_function_call("int", [arg_wrapper], 3, 5)
+
+            result_var = create_identifier("i1", 3, 1)
+            assign = create_assignment(result_var, int_call, 3, 1)
+            typ = ctx%infer_stmt(assign)
+
+            result_var = create_identifier("i1", 4, 1)
+            typ = ctx%infer(result_var)
+
+            if (typ%kind == TINT) then
+                pass_count = pass_count + 1
+                write (*, '(a)') '  ✓ PASS: Intrinsic function types correct'
+            else
+                write (*, '(a)') '  ✗ FAIL: int() function should return integer'
+            end if
+        else
+            write (*, '(a)') '  ✗ FAIL: sqrt() function should return real'
+        end if
+
+    end subroutine test_intrinsic_functions
+
+    subroutine test_type_errors()
+        type(mono_type_t) :: int_type, real_type, char_type
+        character(len=:), allocatable :: error_msg
+        logical :: compat
+        integer :: level
+
+        write (*, '(a)') 'Test 6: Type error detection'
+        test_count = test_count + 1
+
+        ! Create basic types
+        int_type = create_mono_type(TINT)
+        real_type = create_mono_type(TREAL)
+        char_type = create_mono_type(TCHAR, char_size=10)
+
+        ! Check incompatible types
+        compat = is_compatible(int_type, char_type, level)
+
+        if (.not. compat) then
+            ! Generate error message
+            error_msg = type_error(char_type, int_type, "assignment")
+
+            if (index(error_msg, "expected character") > 0 .and. &
+                index(error_msg, "got integer") > 0) then
+                pass_count = pass_count + 1
+                write (*, '(a)') '  ✓ PASS: Type errors properly detected'
+            else
+                write (*, '(a)') '  ✗ FAIL: Type error message incorrect'
+            end if
+        else
+            write (*, '(a)') '  ✗ FAIL: Incompatible types marked as compatible'
+        end if
+
+    end subroutine test_type_errors
+
+end program test_type_checking

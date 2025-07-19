@@ -1,11 +1,18 @@
 program test_cache
     use, intrinsic :: iso_fortran_env, only: error_unit
+    use temp_utils, only: create_temp_dir, get_temp_file_path, temp_dir_manager
     implicit none
 
     character(len=256) :: test_cache_dir, test_program
     character(len=1024) :: output1, output2
     integer :: exit_code
     logical :: cache_exists
+    character(len=:), allocatable :: temp_dir
+    type(temp_dir_manager) :: temp_mgr
+
+    ! Create a temp directory for the test
+    call temp_mgr%create('fortran_test_cache')
+    temp_dir = temp_mgr%path
 
     ! Create test cache directory
     test_cache_dir = './test_cache_tmp'
@@ -18,7 +25,7 @@ program test_cache
     call create_test_program(test_program)
 
     print *, 'Test 1: First run with custom cache directory'
-    call run_with_cache(test_program, test_cache_dir, '-v', output1, exit_code)
+   call run_with_cache(test_program, test_cache_dir, '-v', output1, exit_code, temp_dir)
 
     if (exit_code /= 0) then
         write (error_unit, *) 'FAIL: First run failed'
@@ -43,7 +50,7 @@ inquire (file=trim(test_cache_dir)//'/test_hello_'//repeat('*', 10), exist=cache
 
     print *, ''
     print *, 'Test 2: Second run should use cache'
-    call run_with_cache(test_program, test_cache_dir, '-v', output2, exit_code)
+   call run_with_cache(test_program, test_cache_dir, '-v', output2, exit_code, temp_dir)
 
     if (exit_code /= 0) then
         write (error_unit, *) 'FAIL: Second run failed'
@@ -92,25 +99,29 @@ contains
         close (unit)
     end subroutine create_test_program
 
-    subroutine run_with_cache(filename, cache_dir, flags, output, exit_code)
-        character(len=*), intent(in) :: filename, cache_dir, flags
+    subroutine run_with_cache(filename, cache_dir, flags, output, exit_code, temp_dir)
+        character(len=*), intent(in) :: filename, cache_dir, flags, temp_dir
         character(len=*), intent(out) :: output
         integer, intent(out) :: exit_code
 
         character(len=512) :: command
+        character(len=:), allocatable :: output_file
         integer :: unit, iostat
         character(len=1024) :: line
 
+        ! Create output file path
+        output_file = get_temp_file_path(temp_dir, 'test_output.tmp')
+
         ! Build command with custom cache
         command = 'fpm run fortran -- --cache-dir '//trim(cache_dir)// &
-                  ' '//trim(flags)//' '//trim(filename)//' > /tmp/test_output.tmp 2>&1'
+                  ' '//trim(flags)//' '//trim(filename)//' > '//output_file//' 2>&1'
 
         ! Run command
         call execute_command_line(trim(command), exitstat=exit_code)
 
         ! Read output
         output = ''
-        open (newunit=unit, file='/tmp/test_output.tmp', status='old', iostat=iostat)
+        open (newunit=unit, file=output_file, status='old', iostat=iostat)
         if (iostat == 0) then
             do
                 read (unit, '(a)', iostat=iostat) line
@@ -121,7 +132,7 @@ contains
         end if
 
         ! Clean up
-        call execute_command_line('rm -f /tmp/test_output.tmp')
+        call execute_command_line('rm -f '//output_file)
 
     end subroutine run_with_cache
 

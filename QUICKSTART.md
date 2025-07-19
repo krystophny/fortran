@@ -36,7 +36,7 @@ Output:
 Hello, World!
 ```
 
-**Script-style (.f with type inference):**
+**Lowercase Fortran (.f with type inference):**
 ```bash
 # Create hello.f
 echo 'print *, "Hello, World!"' > hello.f
@@ -70,7 +70,7 @@ fortran calc.f90
 # Area: 9.869604
 ```
 
-**Simple calculation (.f - script-style):**
+**Simple calculation (.f - lowercase fortran):**
 ```fortran
 ! calc.f
 x = 3.14159

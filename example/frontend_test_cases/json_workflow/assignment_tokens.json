@@ -1,0 +1,28 @@
+{
+  "tokens": [
+    {
+      "type": "identifier",
+      "text": "x",
+      "line": 1,
+      "column": 1
+    },
+    {
+      "type": "operator",
+      "text": "=",
+      "line": 1,
+      "column": 3
+    },
+    {
+      "type": "number",
+      "text": "42",
+      "line": 1,
+      "column": 5
+    },
+    {
+      "type": "eof",
+      "text": "",
+      "line": 2,
+      "column": 1
+    }
+  ]
+}

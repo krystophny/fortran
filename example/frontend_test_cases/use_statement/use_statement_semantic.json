@@ -1,0 +1,22 @@
+{
+  "arena_size": 4,
+  "program_index": 4,
+  "nodes": [
+    {
+      "index": 1,
+      "type": "use_statement"
+    },
+    {
+      "index": 2,
+      "type": "literal"
+    },
+    {
+      "index": 3,
+      "type": "print_statement"
+    },
+    {
+      "index": 4,
+      "type": "program"
+    }
+  ]
+}

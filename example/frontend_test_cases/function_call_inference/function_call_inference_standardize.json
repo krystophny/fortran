@@ -1,0 +1,115 @@
+{
+  "input_file": "/afs/itp.tugraz.at/proj/plasma/CODE/ert/fortran/example/frontend_test_cases/function_call_inference/function_call_inference.f",
+  "phase": "standardization",
+  "root_index": 14,
+  "arena_nodes": [
+    {
+      "index": 1,
+      "type": "identifier",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 2,
+      "type": "literal",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 3,
+      "type": "call_or_subscript",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 4,
+      "type": "assignment",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 5,
+      "type": "identifier",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 6,
+      "type": "declaration",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 7,
+      "type": "identifier",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 8,
+      "type": "identifier",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 9,
+      "type": "identifier",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 10,
+      "type": "binary_op",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 11,
+      "type": "assignment",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 12,
+      "type": "identifier",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 13,
+      "type": "function_def",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 14,
+      "type": "program",
+      "parent": 0,
+      "depth": 0
+    },
+    {
+      "index": 15,
+      "type": "implicit_none",
+      "parent": 14,
+      "depth": 1
+    },
+    {
+      "index": 16,
+      "type": "declaration",
+      "parent": 14,
+      "depth": 1
+    },
+    {
+      "index": 17,
+      "type": "contains",
+      "parent": 14,
+      "depth": 1
+    },
+    {
+      "index": 18,
+      "type": "implicit_none",
+      "parent": 13,
+      "depth": 1
+    }
+  ]
+}

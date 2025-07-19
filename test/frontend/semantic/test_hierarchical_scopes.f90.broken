@@ -1,0 +1,292 @@
+program test_hierarchical_scopes
+    use semantic_analyzer
+    use scope_manager
+    use type_system_hm
+    use ast_core
+    implicit none
+
+    integer :: test_count = 0
+    integer :: pass_count = 0
+
+    write (*, '(a)') '=== Testing Hierarchical Scope System ==='
+    write (*, '(a)') ''
+
+    call test_global_scope()
+    call test_function_scope()
+    call test_nested_block_scopes()
+    call test_module_scope()
+    call test_scope_shadowing()
+    call test_loop_variable_scope()
+
+    write (*, '(a)') ''
+    write(*, '(a,i0,a,i0,a)') 'Hierarchical scope tests: ', pass_count, '/', test_count, ' passed'
+
+    if (pass_count /= test_count) then
+        error stop 'Some tests failed!'
+    end if
+
+contains
+
+    subroutine test_global_scope()
+        type(semantic_context_t) :: ctx
+        type(assignment_node) :: assign
+        type(identifier_node) :: target, ref
+        type(literal_node) :: value
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 1: Global scope visibility'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Add variable to global scope
+        target = create_identifier("global_var", 1, 1)
+        value = create_literal("42", LITERAL_INTEGER, 1, 12)
+        assign = create_assignment(target, value, 1, 1)
+        typ = ctx%infer_stmt(assign)
+
+        ! Reference from same scope should work
+        ref = create_identifier("global_var", 2, 1)
+        typ = ctx%infer(ref)
+
+        if (typ%kind == TINT) then
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Global scope variables visible'
+        else
+            write (*, '(a)') '  ✗ FAIL: Global scope lookup failed'
+        end if
+
+    end subroutine test_global_scope
+
+    subroutine test_function_scope()
+        type(semantic_context_t) :: ctx
+        type(function_def_node) :: func
+        type(identifier_node) :: param, local_ref
+        type(assignment_node) :: local_assign
+        type(literal_node) :: value
+        type(ast_node_wrapper) :: param_wrapper, body_wrapper
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 2: Function scope isolation'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Create function with parameter
+        param = create_identifier("x", 1, 10)
+        allocate (param_wrapper%node, source=param)
+
+        ! Create function body with local variable
+        local_ref = create_identifier("y", 2, 5)
+        value = create_literal("10", LITERAL_INTEGER, 2, 9)
+        local_assign = create_assignment(local_ref, value, 2, 5)
+        allocate (body_wrapper%node, source=local_assign)
+
+        func = create_function_def("test_func", [param_wrapper], &
+                               create_identifier("integer", 1, 1), [body_wrapper], 1, 1)
+
+        ! Analyze function
+        typ = ctx%infer_stmt(func)
+
+        ! Try to access function parameter from global scope (should fail)
+        local_ref = create_identifier("x", 3, 1)
+        typ = ctx%infer(local_ref)
+
+        if (typ%kind == TVAR) then  ! Fresh type variable means not found
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Function scope properly isolated'
+        else
+            write (*, '(a)') '  ✗ FAIL: Function parameters leaked to global scope'
+        end if
+
+    end subroutine test_function_scope
+
+    subroutine test_nested_block_scopes()
+        type(semantic_context_t) :: ctx
+        type(if_node) :: if_stmt
+        type(binary_op_node) :: condition
+        type(identifier_node) :: x_ref, y_ref, outer_var
+        type(literal_node) :: zero, one, two
+        type(assignment_node) :: outer_assign, then_assign, else_assign
+        type(ast_node_wrapper) :: then_wrapper, else_wrapper
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 3: Nested block scopes'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Create outer variable
+        outer_var = create_identifier("outer", 1, 1)
+        one = create_literal("1", LITERAL_INTEGER, 1, 9)
+        outer_assign = create_assignment(outer_var, one, 1, 1)
+        typ = ctx%infer_stmt(outer_assign)
+
+        ! Create if statement with variables in different blocks
+        x_ref = create_identifier("x", 2, 5)
+        zero = create_literal("0", LITERAL_INTEGER, 2, 9)
+        condition = create_binary_op(x_ref, zero, ">", 2, 7)
+
+        ! Then block: y = 1
+        y_ref = create_identifier("y", 3, 5)
+        one = create_literal("1", LITERAL_INTEGER, 3, 9)
+        then_assign = create_assignment(y_ref, one, 3, 5)
+        allocate (then_wrapper%node, source=then_assign)
+
+        ! Else block: y = 2 (different y)
+        y_ref = create_identifier("y", 4, 5)
+        two = create_literal("2", LITERAL_INTEGER, 4, 9)
+        else_assign = create_assignment(y_ref, two, 4, 5)
+        allocate (else_wrapper%node, source=else_assign)
+
+        ! Create if statement
+        if_stmt = create_if(condition, then_body=[then_wrapper], else_body=[else_wrapper], line=2, column=1)
+
+        ! Analyze if statement
+        typ = ctx%infer_stmt(if_stmt)
+
+        ! Try to access y from outer scope (should fail)
+        y_ref = create_identifier("y", 5, 1)
+        typ = ctx%infer(y_ref)
+
+        if (typ%kind == TVAR) then  ! Fresh type variable means not found
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Block scope variables properly isolated'
+        else
+            write (*, '(a)') '  ✗ FAIL: Block variables leaked to outer scope'
+        end if
+
+    end subroutine test_nested_block_scopes
+
+    subroutine test_module_scope()
+        type(semantic_context_t) :: ctx
+        type(module_node) :: mod
+        type(declaration_node) :: decl
+        type(identifier_node) :: var_ref
+        type(ast_node_wrapper) :: decl_wrapper
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 4: Module scope'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Create module with declaration
+        decl = create_declaration("real", "module_var", line=1, column=1)
+        allocate (decl_wrapper%node, source=decl)
+
+        mod = create_module("test_module", declarations=[decl_wrapper], line=1, column=1)
+
+        ! Analyze module
+        typ = ctx%infer_stmt(mod)
+
+        ! Module variables should not be visible in global scope
+        var_ref = create_identifier("module_var", 2, 1)
+        typ = ctx%infer(var_ref)
+
+        if (typ%kind == TVAR) then  ! Fresh type variable means not found
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Module scope properly isolated'
+        else
+            write (*, '(a)') '  ✗ FAIL: Module variables leaked to global scope'
+        end if
+
+    end subroutine test_module_scope
+
+    subroutine test_scope_shadowing()
+        type(semantic_context_t) :: ctx
+        type(function_def_node) :: func
+        type(identifier_node) :: param, local_var, ref
+        type(assignment_node) :: global_assign, local_assign
+        type(literal_node) :: int_val, real_val
+        type(ast_node_wrapper) :: param_wrapper, body_wrapper
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 5: Variable shadowing in nested scopes'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Create global variable x = 42 (integer)
+        local_var = create_identifier("x", 1, 1)
+        int_val = create_literal("42", LITERAL_INTEGER, 1, 5)
+        global_assign = create_assignment(local_var, int_val, 1, 1)
+        typ = ctx%infer_stmt(global_assign)
+
+        ! Create function with parameter x (shadows global)
+        param = create_identifier("x", 2, 10)
+        allocate (param_wrapper%node, source=param)
+
+        ! Function body: use x (should refer to parameter, not global)
+        ref = create_identifier("x", 3, 5)
+        real_val = create_literal("3.14", LITERAL_REAL, 3, 9)
+        local_assign = create_assignment(ref, real_val, 3, 5)
+        allocate (body_wrapper%node, source=local_assign)
+
+        func = create_function_def("shadow_test", [param_wrapper], &
+                                  create_identifier("real", 2, 1), [body_wrapper], 2, 1)
+
+        ! This should succeed - x in function refers to parameter
+        typ = ctx%infer_stmt(func)
+
+        ! Verify global x still has integer type
+        ref = create_identifier("x", 4, 1)
+        typ = ctx%infer(ref)
+
+        if (typ%kind == TINT) then
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Variable shadowing works correctly'
+        else
+            write (*, '(a)') '  ✗ FAIL: Variable shadowing failed'
+        end if
+
+    end subroutine test_scope_shadowing
+
+    subroutine test_loop_variable_scope()
+        type(semantic_context_t) :: ctx
+        type(do_loop_node) :: loop
+        type(identifier_node) :: loop_var, ref
+        type(literal_node) :: start_val, end_val
+        type(assignment_node) :: body_assign
+        type(ast_node_wrapper) :: body_wrapper
+        type(mono_type_t) :: typ
+
+        write (*, '(a)') 'Test 6: Loop variable scope'
+        test_count = test_count + 1
+
+        ctx = create_semantic_context()
+
+        ! Create do loop
+        start_val = create_literal("1", LITERAL_INTEGER, 1, 10)
+        end_val = create_literal("10", LITERAL_INTEGER, 1, 15)
+
+        ! Loop body uses loop variable
+        loop_var = create_identifier("i", 2, 5)
+        ref = create_identifier("i", 2, 12)
+        body_assign = create_assignment(loop_var, ref, 2, 5)
+        allocate (body_wrapper%node, source=body_assign)
+
+        block
+            class(ast_node), allocatable :: body_array(:)
+            allocate(body_array(1))
+            allocate(body_array(1), source=body_wrapper%node)
+            loop = create_do_loop("i", start_val, end_val, body=body_array, line=1, column=1)
+        end block
+
+        ! Analyze loop
+        typ = ctx%infer_stmt(loop)
+
+        ! Try to access loop variable outside loop (should fail)
+        ref = create_identifier("i", 3, 1)
+        typ = ctx%infer(ref)
+
+        if (typ%kind == TVAR) then  ! Fresh type variable means not found
+            pass_count = pass_count + 1
+            write (*, '(a)') '  ✓ PASS: Loop variable properly scoped'
+        else
+            write (*, '(a)') '  ✗ FAIL: Loop variable leaked to outer scope'
+        end if
+
+    end subroutine test_loop_variable_scope
+
+end program test_hierarchical_scopes

@@ -187,7 +187,7 @@ source-form = "free"         # Modern free-form source
 # No special compiler flags
 ```
 
-**For .f files (Simple Fortran with Frontend):**
+**For .f files (Lowercase Fortran with Frontend):**
 ```toml
 # Generated fpm.toml (same base + additional flags)
 [build]
