@@ -324,24 +324,19 @@ contains
                             call debug_print('Lock is stale due to age')
                             stale = .true.
                         else
-                            ! Check if process is still running (only on Unix where we have real PIDs)
-                            if (get_os_type() == OS_WINDOWS) then
-                                ! On Windows we use random numbers as PIDs, so skip process check
-                                call debug_print('Windows detected, skipping process check - lock is fresh')
-                            else
-                                read (pid_str, *, iostat=iostat) lock_pid
-                                if (iostat == 0) then
-                                    call debug_print('Checking if process ' // int_to_char(lock_pid) // ' is running')
-                                    if (.not. is_process_running(lock_pid)) then
-                                        call debug_print('Process not running, lock is stale')
-                                        stale = .true.
-                                    else
-                                        call debug_print('Process still running, lock is fresh')
-                                    end if
-                                else
-                                    call debug_print('Failed to parse PID, considering stale')
+                            ! Check if process is still running
+                            read (pid_str, *, iostat=iostat) lock_pid
+                            if (iostat == 0) then
+                                call debug_print('Checking if process ' // int_to_char(lock_pid) // ' is running')
+                                if (.not. is_process_running(lock_pid)) then
+                                    call debug_print('Process not running, lock is stale')
                                     stale = .true.
+                                else
+                                    call debug_print('Process still running, lock is fresh')
                                 end if
+                            else
+                                call debug_print('Failed to parse PID, considering stale')
+                                stale = .true.
                             end if
                         end if
                     end if
@@ -449,9 +444,14 @@ contains
         end interface
 
         if (get_os_type() == OS_WINDOWS) then
-            ! Simple fallback for Windows - just use a random number
-            call random_number(r)
-            pid = int(r*99999)
+            ! On Windows, try to get real PID
+            ! Note: getpid() works on Windows with MinGW/MSYS2
+            pid = getpid()
+            ! If it returns -1, fall back to random number
+            if (pid < 0) then
+                call random_number(r)
+                pid = int(r*99999)
+            end if
         else
             pid = getpid()
         end if
