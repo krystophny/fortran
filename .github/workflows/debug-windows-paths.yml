@@ -1,0 +1,69 @@
+name: Debug Windows Paths
+
+on:
+  push:
+    branches: [ debug-windows-paths ]
+
+jobs:
+  debug-paths:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MinGW (MSYS2)
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: false
+        path-type: inherit
+        install: >-
+          mingw-w64-x86_64-gcc-fortran
+          mingw-w64-x86_64-gcc
+          git
+
+    - name: Add MinGW to PATH
+      run: echo C:\msys64\mingw64\bin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: pwsh
+
+    - name: Install FPM
+      shell: pwsh
+      run: |
+        Write-Host "Installing FPM directly from GitHub releases..."
+        Invoke-WebRequest -Uri "https://github.com/fortran-lang/fpm/releases/download/v0.12.0/fpm-0.12.0-windows-x86_64-gcc-12.exe" -OutFile "fpm.exe"
+        Move-Item -Path "fpm.exe" -Destination "C:\msys64\mingw64\bin\fpm.exe"
+        & "C:\msys64\mingw64\bin\fpm.exe" --version
+
+    - name: Build project
+      run: |
+        echo Building project...
+        fpm build --compiler gfortran
+      shell: cmd
+
+    - name: Run preprocessor test only
+      run: |
+        echo Running preprocessor test with debug output...
+        
+        REM Set single-threaded execution for CI stability
+        set OMP_NUM_THREADS=1
+        set FORTRAN_CI=true
+        set CI=true
+        
+        REM Check current directory and file paths
+        echo Current directory: %CD%
+        dir example\basic\hello\hello.f
+        dir example\basic\hello\hello.f90
+        
+        REM Run only the examples test
+        echo N | fpm test test_examples 2>&1 | findstr /i "preprocessor specified invalid debug"
+        
+        echo Test completed
+      shell: cmd
+
+    - name: Check test artifacts
+      shell: pwsh
+      run: |
+        Write-Host "Checking for any remaining temp files..."
+        Get-ChildItem -Path $env:TEMP -Filter "*fortran_test*" -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "Found temp artifact: $($_.FullName)"
+        }

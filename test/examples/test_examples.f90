@@ -490,21 +490,63 @@ contains
     ! Run example for output comparison - captures only stdout, not debug stderr
     subroutine run_example_for_comparison(filename, cache_dir, output, exit_code)
         use temp_utils, only: get_project_root
+        use fpm_environment, only: get_os_type, OS_WINDOWS
         character(len=*), intent(in) :: filename, cache_dir
         character(len=*), intent(out) :: output
         integer, intent(out) :: exit_code
         character(len=512) :: command, temp_output_file
         integer :: unit, iostat
         character(len=1024) :: line
+        character(len=256) :: ci_env
+        logical :: debug_paths
+
+        ! Check if we should enable debug output
+        call get_environment_variable('CI', ci_env)
+        debug_paths = (len_trim(ci_env) > 0 .and. get_os_type() == OS_WINDOWS)
 
         ! Create temp output file path
         temp_output_file = get_temp_file_path(create_temp_dir('fortran_test'), 'test_comparison_output.tmp')
 
-        ! Run WITHOUT verbose flag and capture only stdout (not stderr debug output)
-        command = 'cd "'//trim(escape_shell_arg(get_project_root()))//'" && '// &
-                  'fpm run fortran -- --cache-dir "'//trim(escape_shell_arg(cache_dir))//'" '// &
-                  trim(escape_shell_arg(filename))//' > "'//trim(escape_shell_arg(temp_output_file))//'" 2>/dev/null'
+        if (debug_paths) then
+            print '(a)', 'DEBUG: run_example_for_comparison'
+            print '(a,a)', '  filename: ', trim(filename)
+            print '(a,a)', '  cache_dir: ', trim(cache_dir)
+            print '(a,a)', '  temp_output_file: ', trim(temp_output_file)
+            print '(a,a)', '  project_root: ', trim(get_project_root())
+        end if
+
+        ! Build OS-specific command
+        if (get_os_type() == OS_WINDOWS) then
+            ! Windows version with proper path handling
+            command = 'cd /d "'//trim(get_project_root())//'" && '// &
+                      'fpm run fortran -- --cache-dir "'//trim(cache_dir)//'" "'// &
+                      trim(filename)//'" > "'//trim(temp_output_file)//'" 2>nul'
+        else
+            ! Unix version
+            command = 'cd "'//trim(escape_shell_arg(get_project_root()))//'" && '// &
+                      'fpm run fortran -- --cache-dir "'//trim(escape_shell_arg(cache_dir))//'" '// &
+                      trim(escape_shell_arg(filename))//' > "'//trim(escape_shell_arg(temp_output_file))//'" 2>/dev/null'
+        end if
+
+        if (debug_paths) then
+            print '(a)', '  command: '//trim(command)
+        end if
+
         call execute_command_line(trim(command), exitstat=exit_code)
+
+        if (debug_paths .and. exit_code /= 0) then
+            print '(a,i0)', '  command exit code: ', exit_code
+            print '(a)', '  Checking if files exist:'
+            block
+                logical :: file_exists
+                inquire(file=trim(filename), exist=file_exists)
+                print '(a,a,l1)', '    ', trim(filename), file_exists
+                inquire(file=trim(cache_dir), exist=file_exists)
+                print '(a,a,l1)', '    cache_dir: ', trim(cache_dir), file_exists
+                inquire(file=trim(temp_output_file), exist=file_exists)
+                print '(a,a,l1)', '    temp_output_file: ', trim(temp_output_file), file_exists
+            end block
+        end if
 
         ! Read only the program output (no debug messages)
         output = ''
@@ -525,7 +567,11 @@ contains
         end if
 
         ! Clean up temp file
-        call execute_command_line('rm -f "'//trim(escape_shell_arg(temp_output_file))//'"')
+        if (get_os_type() == OS_WINDOWS) then
+            call execute_command_line('del /f /q "'//trim(temp_output_file)//'" 2>nul')
+        else
+            call execute_command_line('rm -f "'//trim(escape_shell_arg(temp_output_file))//'"')
+        end if
 
     end subroutine run_example_for_comparison
 
