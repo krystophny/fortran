@@ -10,7 +10,7 @@ module runner
     use fpm_strings, only: string_t
     use fpm_error, only: error_t
     use fpm_filesystem, only: join_path
-    use fpm_environment, only: get_os_type, OS_WINDOWS
+    use fpm_environment, only: get_os_type, OS_WINDOWS, get_env
   use frontend_integration, only: compile_with_frontend, compile_with_frontend_debug, is_simple_fortran_file
     use debug_state, only: get_debug_flags
     use temp_utils, only: create_temp_dir, cleanup_temp_dir, get_temp_file_path, mkdir
@@ -377,8 +377,19 @@ call print_error('Cache is locked by another process. Use without --no-wait to w
 
         call debug_print('Running command: ' // trim(command))
         
+        ! DEBUG - Enable on debug branch
+        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+            print *, 'DEBUG: About to execute FPM command'
+            flush(6)  ! Flush stdout
+        end if
 
         call execute_command_line(command, exitstat=exitstat, cmdstat=cmdstat, wait=.true.)
+        
+        ! DEBUG - Enable on debug branch
+        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+            print *, 'DEBUG: FPM command completed, exitstat=', exitstat, ' cmdstat=', cmdstat
+            flush(6)  ! Flush stdout
+        end if
 
         if (cmdstat /= 0) then
             call print_error('Failed to execute fpm')
@@ -386,10 +397,25 @@ call print_error('Cache is locked by another process. Use without --no-wait to w
         else if (exitstat /= 0) then
             ! FPM returned non-zero, likely compilation error
             exit_code = exitstat
+        else
+            ! Success case - make sure exit_code is set
+            exit_code = 0
         end if
 
         ! Release the lock
+        ! DEBUG - Enable on debug branch
+        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+            print *, 'DEBUG: About to release lock for ', trim(basename)
+            flush(6)  ! Flush stdout
+        end if
+        
         call release_lock(cache_dir, basename)
+        
+        ! DEBUG - Enable on debug branch
+        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+            print *, 'DEBUG: Lock released for ', trim(basename)
+            flush(6)  ! Flush stdout
+        end if
 
         ! Clean up (optional for now - we might want to keep for caching)
         ! command = 'rm -rf "' // trim(project_dir) // '"'
