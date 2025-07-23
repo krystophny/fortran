@@ -14,6 +14,7 @@ module cache_lock
 
     integer, parameter :: MAX_WAIT_TIME = 60  ! seconds (increased for slower CI environments)
     integer, parameter :: STALE_LOCK_TIME = 300  ! 5 minutes
+    integer, parameter :: WINDOWS_CI_STALE_TIME = 10  ! 10 seconds on Windows CI
 
 contains
 
@@ -320,25 +321,35 @@ contains
                         current_time = get_current_timestamp()
 
                         ! Check if lock is older than stale threshold
-                        if (current_time - lock_time > STALE_LOCK_TIME) then
-                            call debug_print('Lock is stale due to age')
-                            stale = .true.
-                        else
-                            ! Check if process is still running
-                            read (pid_str, *, iostat=iostat) lock_pid
-                            if (iostat == 0) then
-                                call debug_print('Checking if process ' // int_to_char(lock_pid) // ' is running')
-                                if (.not. is_process_running(lock_pid)) then
-                                    call debug_print('Process not running, lock is stale')
-                                    stale = .true.
-                                else
-                                    call debug_print('Process still running, lock is fresh')
-                                end if
-                            else
-                                call debug_print('Failed to parse PID, considering stale')
-                                stale = .true.
+                        ! Use shorter timeout on Windows CI
+                        block
+                            integer :: stale_threshold
+                            stale_threshold = STALE_LOCK_TIME
+                            if (get_os_type() == OS_WINDOWS .and. len_trim(get_env('CI', '')) > 0) then
+                                stale_threshold = WINDOWS_CI_STALE_TIME
+                                call debug_print('Using Windows CI stale time: ' // int_to_char(stale_threshold) // ' seconds')
                             end if
-                        end if
+                            
+                            if (current_time - lock_time > stale_threshold) then
+                                call debug_print('Lock is stale due to age')
+                                stale = .true.
+                            else
+                                ! Check if process is still running
+                                read (pid_str, *, iostat=iostat) lock_pid
+                                if (iostat == 0) then
+                                    call debug_print('Checking if process ' // int_to_char(lock_pid) // ' is running')
+                                    if (.not. is_process_running(lock_pid)) then
+                                        call debug_print('Process not running, lock is stale')
+                                        stale = .true.
+                                    else
+                                        call debug_print('Process still running, lock is fresh')
+                                    end if
+                                else
+                                    call debug_print('Failed to parse PID, considering stale')
+                                    stale = .true.
+                                end if
+                            end if
+                        end block
                     end if
                 else
                     ! Invalid timestamp format, consider it stale
