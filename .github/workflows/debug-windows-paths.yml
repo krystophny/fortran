@@ -40,22 +40,14 @@ jobs:
         fpm build --compiler gfortran
       shell: cmd
 
-    - name: Compile debug test
+    - name: Compile and run simple debug test
       run: |
-        echo Compiling Windows path debug test...
+        echo Compiling simple Windows path debug test...
+        gfortran -o test_windows_paths_simple.exe test\windows\test_windows_paths_simple.f90
         
-        REM First find the actual build directory
-        for /d %%i in (build\gfortran_*) do set BUILD_DIR=%%i
-        echo Build directory: %BUILD_DIR%
-        
-        REM Compile with correct paths
-        gfortran -I %BUILD_DIR%\fortran -o test_windows_paths.exe test\windows\test_windows_paths.f90 %BUILD_DIR%\fortran\libfortran.a
-      shell: cmd
-
-    - name: Run debug test
-      run: |
-        echo Running Windows path debug test...
-        test_windows_paths.exe
+        echo.
+        echo Running simple debug test...
+        test_windows_paths_simple.exe
       shell: cmd
     
     - name: Run preprocessor test with timeout
