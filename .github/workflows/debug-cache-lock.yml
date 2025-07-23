@@ -1,0 +1,114 @@
+name: Debug Cache Lock
+
+on:
+  push:
+    branches: [ debug-windows-cache-lock ]
+  pull_request:
+    branches: [ debug-windows-cache-lock ]
+  workflow_dispatch:
+
+jobs:
+  debug-cache-lock:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MinGW (MSYS2)
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: false
+        path-type: inherit
+        install: >-
+          mingw-w64-x86_64-gcc-fortran
+          mingw-w64-x86_64-gcc
+          git
+
+    - name: Add MinGW to PATH
+      run: echo C:\msys64\mingw64\bin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: pwsh
+
+    - name: Install FPM
+      shell: pwsh
+      run: |
+        Write-Host "Installing FPM directly from GitHub releases..."
+        Invoke-WebRequest -Uri "https://github.com/fortran-lang/fpm/releases/download/v0.12.0/fpm-0.12.0-windows-x86_64-gcc-12.exe" -OutFile "fpm.exe"
+        Move-Item -Path "fpm.exe" -Destination "C:\msys64\mingw64\bin\fpm.exe"
+        & "C:\msys64\mingw64\bin\fpm.exe" --version
+
+    - name: Build project
+      run: |
+        echo Building project...
+        set OMP_NUM_THREADS=1
+        fpm build --compiler gfortran --flag="-cpp"
+      shell: cmd
+
+    - name: Run cache lock debug test
+      run: |
+        echo Running cache lock debug test...
+        set OMP_NUM_THREADS=1
+        set FORTRAN_CI=true
+        echo N | fpm test test_cache_lock_debug
+      shell: cmd
+
+    - name: Run original cache lock test with extra debugging
+      run: |
+        echo Running original cache lock test...
+        set OMP_NUM_THREADS=1
+        set FORTRAN_CI=true
+        set FORTRAN_DEBUG_CACHE=1
+        echo N | fpm test test_cache_lock
+      shell: cmd
+      continue-on-error: true
+
+    - name: Run incremental compilation test standalone
+      run: |
+        echo Creating test program...
+        echo program hello > test_hello.f90
+        echo   print *, 'Hello World' >> test_hello.f90
+        echo end program hello >> test_hello.f90
+        
+        echo.
+        echo First run with cache...
+        build\gfortran_*\app\fortran.exe --cache-dir test_cache -vv test_hello.f90
+        
+        echo.
+        echo Listing cache directory...
+        dir /s test_cache
+        
+        echo.
+        echo Second run (should use cache)...
+        build\gfortran_*\app\fortran.exe --cache-dir test_cache -vv test_hello.f90
+        
+        echo.
+        echo Third run after delay...
+        timeout /t 5
+        build\gfortran_*\app\fortran.exe --cache-dir test_cache -vv test_hello.f90
+      shell: cmd
+      continue-on-error: true
+
+    - name: Test lock file operations directly
+      run: |
+        echo Testing lock file operations...
+        
+        REM Create a test directory
+        mkdir test_lock_dir
+        
+        REM Create a lock file
+        echo 12345 > test_lock_dir\test.lock
+        echo 20240101000000 >> test_lock_dir\test.lock
+        
+        REM Try to access it
+        type test_lock_dir\test.lock
+        
+        REM Try to delete it
+        del test_lock_dir\test.lock
+        
+        REM Try atomic file creation
+        echo Testing atomic file creation...
+        echo test > test_lock_dir\test2.lock
+        
+        REM Clean up
+        rmdir /s /q test_lock_dir
+      shell: cmd

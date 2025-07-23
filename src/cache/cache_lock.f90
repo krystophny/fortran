@@ -2,7 +2,7 @@ module cache_lock
     use iso_c_binding, only: c_int
     use iso_fortran_env, only: error_unit
     use temp_utils, only: create_temp_dir, cleanup_temp_dir, get_temp_file_path, mkdir
-    use fpm_environment, only: get_os_type, OS_WINDOWS
+    use fpm_environment, only: get_os_type, OS_WINDOWS, get_env
     use fpm_filesystem, only: join_path
     use system_utils, only: sys_remove_file, sys_move_file, sys_find_files, &
                             sys_create_symlink, sys_process_exists, sys_sleep, sys_file_exists
@@ -46,8 +46,10 @@ contains
         do
             ! First check if lock already exists
             inquire (file=lock_file, exist=locked)
-            ! DEBUG
-            ! print *, 'DEBUG acquire_lock: lock exists=', locked, ' for ', trim(lock_file)
+            ! DEBUG - Enable on debug branch
+            if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+                print *, 'DEBUG acquire_lock: lock exists=', locked, ' for ', trim(lock_file)
+            end if
             if (.not. locked) then
                 ! Try to create lock file atomically
                 if (try_create_lock(lock_file)) then
@@ -69,8 +71,10 @@ contains
 
                 ! Lock exists and is not stale
                 success = .false.
-                ! DEBUG
-                ! print *, 'DEBUG: Lock exists and not stale, setting success=F, should_wait=', should_wait
+                ! DEBUG - Enable on debug branch
+                if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+                    print *, 'DEBUG: Lock exists and not stale, setting success=F, should_wait=', should_wait
+                end if
 
                 ! If not waiting, fail immediately
                 if (.not. should_wait) then
@@ -165,6 +169,11 @@ contains
         logical :: file_exists, temp_exists
 
         success = .false.
+        
+        ! DEBUG - Enable on debug branch
+        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+            print *, 'DEBUG try_create_lock: attempting to create ', trim(lock_file)
+        end if
 
         ! Create temporary lock file with PID and timestamp
         call get_pid(pid)
@@ -187,11 +196,22 @@ contains
                     ! In CI, use a simpler approach with retries
                     call debug_print('CI environment detected, using simple locking')
                     
+                    ! DEBUG - Enable on debug branch
+                    if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+                        print *, 'DEBUG: Windows CI path in try_create_lock'
+                    end if
+                    
                     ! Check if lock exists
                     file_exists = check_lock_file_exists(lock_file)
                     if (.not. file_exists) then
                         ! Try to create it using echo
                         command = 'echo '//trim(pid_str)//' > "'//trim(escape_quotes(lock_file))//'" 2>nul'
+                        
+                        ! DEBUG - Enable on debug branch
+                        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+                            print *, 'DEBUG: Executing command: ', trim(command)
+                        end if
+                        
                         call execute_command_line(trim(command), exitstat=exitstat)
                         
                         if (exitstat == 0) then
@@ -340,11 +360,25 @@ contains
         logical :: success
 
         call debug_print('Removing lock file: ' // trim(lock_file))
+        
+        ! DEBUG - Enable on debug branch
+        if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+            print *, 'DEBUG remove_lock: removing ', trim(lock_file)
+        end if
+        
         call sys_remove_file(lock_file, success)
         if (.not. success) then
             call debug_print('Failed to remove lock file: ' // trim(lock_file))
+            ! DEBUG - Enable on debug branch
+            if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+                print *, 'DEBUG: Failed to remove lock file!'
+            end if
         else
             call debug_print('Lock file removed successfully')
+            ! DEBUG - Enable on debug branch
+            if (len_trim(get_env('FORTRAN_DEBUG_CACHE', '')) > 0) then
+                print *, 'DEBUG: Lock file removed successfully'
+            end if
         end if
 
     end subroutine remove_lock

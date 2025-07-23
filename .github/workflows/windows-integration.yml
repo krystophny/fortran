@@ -6,8 +6,10 @@ name: Windows Integration Tests
 on:
   push:
     branches: [ main, windows-support ]
+    branches-ignore: [ debug-windows-cache-lock ]
   pull_request:
     branches: [ main, windows-support ]
+    branches-ignore: [ debug-windows-cache-lock ]
 
 jobs:
   build-windows:
