@@ -40,7 +40,19 @@ jobs:
         fpm build --compiler gfortran
       shell: cmd
 
-    - name: Run preprocessor test only
+    - name: Compile debug test
+      run: |
+        echo Compiling Windows path debug test...
+        gfortran -I build\gfortran_*\fortran -o test_windows_paths.exe test\debug\test_windows_paths.f90 build\gfortran_*\fortran\libfortran.a
+      shell: cmd
+
+    - name: Run debug test
+      run: |
+        echo Running Windows path debug test...
+        test_windows_paths.exe
+      shell: cmd
+    
+    - name: Run preprocessor test with timeout
       run: |
         echo Running preprocessor test with debug output...
         
@@ -54,11 +66,19 @@ jobs:
         dir example\basic\hello\hello.f
         dir example\basic\hello\hello.f90
         
-        REM Run only the examples test
-        echo N | fpm test test_examples 2>&1 | findstr /i "preprocessor specified invalid debug"
+        REM Run test with a timeout to prevent hanging
+        REM Using start /B with timeout to allow graceful termination
+        start /B fpm test test_examples > test_output.log 2>&1
         
-        echo Test completed
+        REM Wait up to 60 seconds then check output
+        timeout /t 60 /nobreak >nul
+        
+        REM Show relevant output
+        type test_output.log | findstr /i "preprocessor specified invalid debug path"
+        
+        echo Test completed (or timed out)
       shell: cmd
+      continue-on-error: true
 
     - name: Check test artifacts
       shell: pwsh
