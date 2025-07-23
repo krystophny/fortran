@@ -43,7 +43,13 @@ jobs:
     - name: Compile debug test
       run: |
         echo Compiling Windows path debug test...
-        gfortran -I build\gfortran_*\fortran -o test_windows_paths.exe test\debug\test_windows_paths.f90 build\gfortran_*\fortran\libfortran.a
+        
+        REM First find the actual build directory
+        for /d %%i in (build\gfortran_*) do set BUILD_DIR=%%i
+        echo Build directory: %BUILD_DIR%
+        
+        REM Compile with correct paths
+        gfortran -I %BUILD_DIR%\fortran -o test_windows_paths.exe test\windows\test_windows_paths.f90 %BUILD_DIR%\fortran\libfortran.a
       shell: cmd
 
     - name: Run debug test
